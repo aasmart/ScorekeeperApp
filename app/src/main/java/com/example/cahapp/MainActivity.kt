@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -13,23 +15,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cahapp.game.Game
 import com.example.cahapp.ui.theme.CAHAppTheme
 import com.example.cahapp.ui.theme.Purple500
 import com.example.cahapp.ui.theme.Purple700
-import org.w3c.dom.Text
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +49,22 @@ class MainActivity : ComponentActivity() {
 fun AppMain(appViewModel: AppViewModel = viewModel()) {
     val appUiState by appViewModel.uiState.collectAsState()
 
+    appUiState.focusedGame?.GetAsCard();
+
     Scaffold(
+        topBar = {
+            TopAppBar(
+                backgroundColor = Purple700,
+                elevation = 8.dp
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TitleText("Cards Against Humanity")
+                }
+            }
+        },
         bottomBar = {
             BottomAppBar(
                 backgroundColor = Purple700
@@ -70,15 +82,12 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            TitleText("Cards Against Humanity")
-
-            if(appUiState.isCreatingGame) {
-                NewGameModal(appViewModel)
-            }
-
             GameList(appUiState.gameCards)
         }
     }
+
+    if(appUiState.isCreatingGame)
+        NewGameModal(appViewModel)
 }
 
 @Composable
@@ -86,7 +95,7 @@ fun TitleText(title: String) {
     Text(
         text = title,
         fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
+        fontSize = 24.sp,
         modifier = Modifier.padding(12.dp),
         color = Color.White,
     )
@@ -94,7 +103,7 @@ fun TitleText(title: String) {
 
 @Composable
 fun ColumnScope.GameList(games: List<Game>) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
             .fillMaxWidth()
@@ -103,7 +112,9 @@ fun ColumnScope.GameList(games: List<Game>) {
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        games.forEach { game -> game.GetAsCard() }
+        itemsIndexed(games) {index, game -> {
+            //game.GetAsCard()
+        }}
     }
 }
 
@@ -123,19 +134,19 @@ fun NewGameModal(appViewModel: AppViewModel) {
     val name = remember { mutableStateOf("") }
 
     fun isValidName(): Boolean {
-        return name.value.length in 1..16
+        return name.value.length in 1..24
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(Color(0, 0, 0, 80)), contentAlignment = Alignment.Center) {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
                 shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.padding(10.dp,5.dp,10.dp,10.dp),
+                modifier = Modifier.padding(10.dp, 5.dp, 10.dp, 10.dp),
                 elevation = 8.dp,
             ) {
                 Column(
@@ -162,7 +173,7 @@ fun NewGameModal(appViewModel: AppViewModel) {
                         modifier = Modifier.padding(all = 8.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Button(
+                        OutlinedButton(
                             onClick = { appViewModel.toggleGameModal() },
                             modifier = Modifier.padding(end = 16.dp)
                         ) {
@@ -170,7 +181,8 @@ fun NewGameModal(appViewModel: AppViewModel) {
                         }
 
                         Button(
-                            onClick = { appViewModel.addNewGame(name.value) }, enabled = isValidName()
+                            onClick = { appViewModel.addNewGame(name.value) },
+                            enabled = isValidName()
                         ) {
                             Text(text = stringResource(R.string.create_game))
                         }
@@ -179,7 +191,6 @@ fun NewGameModal(appViewModel: AppViewModel) {
             }
         }
     }
-
 }
 
 @Preview(showBackground = true)

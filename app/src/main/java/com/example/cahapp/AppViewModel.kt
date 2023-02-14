@@ -10,17 +10,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class AppViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(AppUiState(listOf(), false))
+    private val _uiState = MutableStateFlow(AppUiState(listOf(), false, null))
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
     private val games = mutableStateListOf<Game>()
 
     fun toggleGameModal() {
-        _uiState.value = AppUiState(games, !_uiState.value.isCreatingGame)
+        _uiState.value = AppUiState(games, !_uiState.value.isCreatingGame, null)
     }
 
     fun addNewGame(name: String = "New Game") {
-        games.add(Game(name, listOf("Mom", "Dad", "Alex", "Caitlin")))
-        _uiState.value = AppUiState(games, false);
+        games.add(Game(name, listOf("Mom", "Dad", "Alex", "Caitlin"), false))
+        _uiState.value = AppUiState(games, false, null);
+    }
+
+    fun setFocusedGame(game: Game) {
+        _uiState.value = AppUiState(games, false, game);
     }
 }
