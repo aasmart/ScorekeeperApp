@@ -4,4 +4,7 @@
     <string name="create_game">Confirm</string>
     <string name="game_name">Game Name</string>
     <string name="game_status">Game Status</string>
+    <string name="game_preset">Game Type Preset</string>
+    <string name="create_new_game">Create New Game</string>
+    <string name="player_name_field">Player name</string>
 </resources>

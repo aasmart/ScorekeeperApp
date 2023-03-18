@@ -8,4 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#FF474747</color>
+    <color name="gold">#E0BA11</color>
+    <color name="silver">#BDBDB3</color>
+    <color name="bronze">#D1872F</color>
 </resources>
