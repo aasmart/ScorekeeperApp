@@ -3,6 +3,7 @@ package com.example.cahapp.game
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,7 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
     val playerScores = mutableStateMapOf<String, Int>();
     val isComplete = mutableStateOf(false);
     private var appViewModel: AppViewModel? = null;
+    private val podiumPlaces =  arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD);
 
     init {
         players.forEach { name ->
@@ -126,7 +128,7 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
     }
 
     @Composable
-    fun GetAsPage() {
+    fun GamePage() {
         @Composable
         fun TopBar() {
             TopAppBar(
@@ -171,12 +173,17 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
             }
         }
 
-        @Composable
-        fun DetermineLayout() {
+        fun LazyListScope.determineLayout() {
             when (type) {
                 ScoringType.SIMPLE_SCORING -> {
-                    if(!isComplete.value)
-                        ScoreCard()
+                    if(isComplete.value)
+                        return;
+
+                    item {
+                        Text(text = "Scoring", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+                        Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
+                    }
+                    scoreCard()
                 }
                 ScoringType.ROUNDS -> TODO()
             }
@@ -189,14 +196,21 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                     FinishGameButton()
             },
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(8.dp, 8.dp)
             ) {
-                DetermineLayout()
-                Text(text = "Leaderboard", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
-                Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
-                Leaderboard()
+                determineLayout()
+
+                item {
+                    Text(text = "Leaderboard", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+                    Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
+                }
+
+                leaderboard()
             }
         }
     }
@@ -211,54 +225,38 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
         }
     }
 
-    @Composable
-    fun ScoreCard() {
-        Card(
-            shape = RoundedCornerShape(3),
-            elevation = 8.dp,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
-            Column() {
-                // HEADER BOX
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+    private fun LazyListScope.scoreCard() {
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .background(Purple500, RoundedCornerShape(8))
+                    .fillMaxWidth()
+                    .height(45.dp)
+                    .shadow(1.dp)
+            ) {
+                Text(
+                    text = "PLAYER",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .background(Purple500)
-                        .fillMaxWidth()
-                        .height(45.dp)
-                        .shadow(1.dp)
-                ) {
-                    Text(
-                        text = "PLAYER",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .zIndex(1f)
-                    )
-                    Text(
-                        text = "SCORE",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .zIndex(1f)
-                    )
-                }
-
-                LazyColumn(
+                        .zIndex(1f)
+                )
+                Text(
+                    text = "SCORE",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(12.dp)
-
-                ) {
-                    items(playerScores.keys.toList()) { player -> PlayerCard(cardName = player) }
-                }
+                        .zIndex(1f)
+                )
             }
         }
+        items(playerScores.keys.toList()) { player -> PlayerCard(cardName = player) }
+    }
+
+    private fun updateScore(playerName: String, amount: Int = 1) {
+        playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
     }
 
     @Composable
@@ -354,194 +352,177 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
     }
 
     @Composable
-    private fun Leaderboard() {
-        @Composable
-        fun PlayerLeaderboardCard(cardName: String, rank: Int) {
-            Card(
-                shape = RoundedCornerShape(10),
-                elevation = 4.dp,
+    private fun PlayerLeaderboardCard(cardName: String, rank: Int) {
+        Card(
+            shape = RoundedCornerShape(10),
+            elevation = 4.dp,
+            modifier = Modifier
+                .height(60.dp)
+                .fillMaxWidth()
+                .padding(0.dp, 0.dp, 0.dp, 0.dp)
+                .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .height(60.dp)
-                    .fillMaxWidth()
-                    .padding(0.dp, 0.dp, 8.dp, 0.dp)
-                    .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+                    .fillMaxSize()
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .fillMaxSize()
+                        .weight(2f, true)
+                        .background(Purple500)
+                        .fillMaxHeight()
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .weight(2f, true)
-                            .background(Purple500)
-                            .fillMaxHeight()
-                    ) {
-                        Text(
-                            text = rank.toString(),
-                            fontWeight = FontWeight.Black,
-                            fontSize = 24.sp,
-                        )
-                    }
                     Text(
-                        text = cardName,
-                        modifier = Modifier
-                            .weight(10f, true)
-                            .fillMaxWidth()
-                            .padding(10.dp, 0.dp),
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Start
-                    )
-                    Text(
-                        text = playerScores.getValue(cardName).toString(),
-                        modifier = Modifier
-                            .weight(6f, true)
-                            .padding(12.dp, 0.dp),
+                        text = rank.toString(),
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
-                        textAlign = TextAlign.End
                     )
                 }
+                Text(
+                    text = cardName,
+                    modifier = Modifier
+                        .weight(10f, true)
+                        .fillMaxWidth()
+                        .padding(10.dp, 0.dp),
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Start
+                )
+                Text(
+                    text = playerScores.getValue(cardName).toString(),
+                    modifier = Modifier
+                        .weight(6f, true)
+                        .padding(12.dp, 0.dp),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.End
+                )
             }
         }
+    }
 
-        val maxHeight = 0.75f;
+    @Composable
+    private fun RowScope.podium(players: MutableMap<String, Int>, placeOrder: Array<PodiumPlace>) {
+        val maxHeight = 0.85f;
         val minHeight = 0.5f;
         val shadowMax = 8.0f;
         val shadowMin = 2.0f;
-        @Composable
-        fun RowScope.Podium(players: MutableMap<String, Int>, numPlaces: Int) {
-            val localDensity = LocalDensity.current;
 
-            val weight = 1.0f / numPlaces
-            val heightDecrease = (maxHeight - minHeight) / (numPlaces - 1)
-            val shadowDecrease = (shadowMax - shadowMin) / (numPlaces - 1)
-            val playerNames = players.keys.toList();
+        val localDensity = LocalDensity.current;
 
-            // Print out the places
-            for (i in 1..min(playerNames.size, numPlaces)) {
-                val playerName = playerNames[i - 1]
-                Box(
-                    contentAlignment = Alignment.BottomCenter,
-                    modifier = Modifier
-                        .weight(weight)
-                        .fillMaxHeight()
-                ) {
-                    var podiumHeight by remember {
-                        mutableStateOf(0.dp)
-                    }
+        val weight = 1.0f / placeOrder.size
+        val heightDecrease = (maxHeight - minHeight) / (placeOrder.size - 1)
+        val shadowDecrease = (shadowMax - shadowMin) / (placeOrder.size - 1)
+        val playerNames = players.keys.toList();
 
-                    Text(text= playerName, textAlign = TextAlign.Center, modifier = Modifier.padding(4.dp).offset(y = -podiumHeight), fontWeight = FontWeight.Black)
+        // Print out the places
+        for (place in placeOrder) {
+            val rankIndex = place.rankingInt;
 
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.BottomCenter,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(maxHeight - (i - 1) * heightDecrease)
-                                .shadow((shadowMax - shadowDecrease * (i-1)).dp)
-                                .background(
-                                    color = colorResource(PodiumPlace.values()[i - 1].colorId),
-                                    RoundedCornerShape(4)
-                                )
-                                .onGloballyPositioned { pos ->
-                                    podiumHeight = with(localDensity) { pos.size.height.toDp() }
-                                }
-                        ) {
-                            Text(text = players[playerName].toString(), fontWeight = FontWeight.Black, color = Purple500, modifier = Modifier
-                                .padding(16.dp))
-                        }
-                    }
-                }
+            if(playerNames.size <= rankIndex - 1)
+                continue;
 
-                // Remove the player if they're on the podium
-                players.remove(playerName)
-            }
-        }
-
-        val numPodiumPlaces = 3;
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            /* TODO allow tying */
-            val sortedPlayers = playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
-
-            Box(modifier = Modifier
-                .offset(0.dp, 3.dp)
-                .fillMaxWidth()
-                .weight(0.2f, true), contentAlignment = Alignment.BottomCenter
-            ) {
-                Row(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp, 0.dp), verticalAlignment = Alignment.Bottom) {
-                    Podium(sortedPlayers, numPodiumPlaces);
-                }
-            }
-
-            Card(
-                shape = RoundedCornerShape(3),
-                elevation = 8.dp,
+            val playerName = playerNames[rankIndex - 1]
+            Box(
+                contentAlignment = Alignment.BottomCenter,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp, 0.dp, 12.dp, 12.dp)
-                    .weight(.80f, true)
+                    .weight(weight)
+                    .fillMaxHeight()
+                    .zIndex(-rankIndex.toFloat())
             ) {
-                Column() {
-                    // HEADER BOX
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                var podiumHeight by remember { mutableStateOf(0.dp) }
+
+                Text(
+                    text = playerName,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .offset(y = -podiumHeight)
+                )
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Box(
+                        contentAlignment = Alignment.BottomCenter,
                         modifier = Modifier
-                            .background(Purple500)
                             .fillMaxWidth()
-                            .height(45.dp)
-                            .shadow(1.dp)
+                            .fillMaxHeight(maxHeight - (rankIndex - 1) * heightDecrease)
+                            .shadow((shadowMax - shadowDecrease * (rankIndex - 1)).dp)
+                            .background(
+                                color = colorResource(PodiumPlace.values()[rankIndex - 1].colorId),
+                                RoundedCornerShape(4)
+                            )
+                            .onGloballyPositioned { pos ->
+                                podiumHeight = with(localDensity) { pos.size.height.toDp() }
+                            }
                     ) {
-                        Text(
-                            text = "Rank",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .zIndex(1f)
-                        )
-                        Text(
-                            text = "Player",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .zIndex(1f)
-                        )
-                        Text(
-                            text = "Score",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .zIndex(1f)
-                        )
-                    }
-
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(12.dp)
-
-                    ) {
-                        itemsIndexed(sortedPlayers.keys.toList()) { index, player -> PlayerLeaderboardCard(cardName = player, rank = index + 1 + numPodiumPlaces) }
+                        Text(text = players[playerName].toString(), fontWeight = FontWeight.Black, color = Purple500, modifier = Modifier
+                            .padding(16.dp))
                     }
                 }
             }
         }
     }
 
-    private fun updateScore(playerName: String, amount: Int = 1) {
-        playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
+    private fun LazyListScope.leaderboard() {
+        val sortedPlayers = playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
+
+        item {
+            Box(modifier = Modifier
+                .offset(0.dp, 3.dp)
+                .fillMaxWidth()
+                .height(120.dp), contentAlignment = Alignment.BottomCenter
+            ) {
+                Row(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 0.dp), verticalAlignment = Alignment.Bottom) {
+                    podium(sortedPlayers, podiumPlaces);
+                }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .background(Purple500, RoundedCornerShape(8))
+                    .fillMaxWidth()
+                    .height(45.dp)
+                    .shadow(1.dp)
+            ) {
+                Text(
+                    text = "Rank",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                )
+                Text(
+                    text = "Player",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                )
+                Text(
+                    text = "Score",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                )
+            }
+        }
+
+        itemsIndexed(sortedPlayers.keys.toList().subList(min(podiumPlaces.size, sortedPlayers.size), sortedPlayers.size)) { index, player ->
+            run {
+                PlayerLeaderboardCard(cardName = player, rank = podiumPlaces.size + index + 1)
+            }
+        }
     }
 
     fun toJson(): JSONObject {
