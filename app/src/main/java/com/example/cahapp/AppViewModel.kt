@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.ViewModel
 import com.example.cahapp.game.Game
+import com.example.cahapp.game.SingleWinRoundGame
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,12 @@ class AppViewModel : ViewModel() {
     }
 
     fun addNewGame(name: String = "New Game", players: List<String>, type: Game.ScoringType) {
-        games.add(Game(name, players, type))
+        val gameNew = when(type) {
+            Game.ScoringType.SIMPLE_SCORING -> Game(name, players)
+            Game.ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name, players)
+        }
+
+        games.add(gameNew)
         _uiState.value = AppUiState(games, false, null, false);
     }
 

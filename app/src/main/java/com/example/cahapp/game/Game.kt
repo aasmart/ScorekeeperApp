@@ -34,9 +34,9 @@ import com.example.cahapp.ui.theme.Purple700
 import org.json.JSONObject
 import java.lang.Integer.min
 
-class Game(var name: String, players: List<String>, val type: ScoringType) : java.io.Serializable {
-    val playerScores = mutableStateMapOf<String, Int>();
-    val isComplete = mutableStateOf(false);
+open class Game(var name: String, players: List<String>) : java.io.Serializable {
+    private val playerScores = mutableStateMapOf<String, Int>();
+    private val isComplete = mutableStateOf(false);
     private var appViewModel: AppViewModel? = null;
     private val podiumPlaces =  arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD);
 
@@ -48,13 +48,17 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
 
     enum class ScoringType(val readableName: String) {
         SIMPLE_SCORING("Simple Scoring"),
-        ROUNDS("Round Scoring")
+        ROUNDS_SINGLE("Round Scoring: Single Winner")
     }
 
     enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
         FIRST(1, R.color.gold),
         SECOND(2, R.color.silver),
         THIRD(3, R.color.bronze)
+    }
+
+    protected fun updateScore(playerName: String, amount: Int = 1) {
+        playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -128,6 +132,64 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
     }
 
     @Composable
+    private fun GameTopAppBar() {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
+                IconButton(onClick = { appViewModel?.setFocusedGameVisible(false) }, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                TitleText(name)
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                IconButton(onClick = { /* TODO: implement hamburger menu */ }, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = "Menu",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun FinishGameButton() {
+        FloatingActionButton(
+            onClick = {  isComplete.value = true },
+            backgroundColor = Purple500,
+        ) {
+            Icon(Icons.Filled.Check, "Game")
+        }
+    }
+
+    protected open fun LazyListScope.gamePageScoringLayout() {
+        item {
+            Text(text = "Scoring", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+            Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
+        }
+
+        scoreCard()
+    }
+
+    @Composable
     fun GamePage() {
         @Composable
         fun TopBar() {
@@ -135,57 +197,7 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                 backgroundColor = Purple700,
                 elevation = 8.dp,
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
-                        IconButton(onClick = { appViewModel?.setFocusedGameVisible(false) }, modifier = Modifier.size(32.dp)) {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        TitleText(name)
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.End,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        IconButton(onClick = { /* TODO: implement hamburger menu */ }, modifier = Modifier.size(32.dp)) {
-                            Icon(
-                                imageVector = Icons.Filled.Menu,
-                                contentDescription = "Menu",
-                                tint = Color.White,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        fun LazyListScope.determineLayout() {
-            when (type) {
-                ScoringType.SIMPLE_SCORING -> {
-                    if(isComplete.value)
-                        return;
-
-                    item {
-                        Text(text = "Scoring", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
-                        Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
-                    }
-                    scoreCard()
-                }
-                ScoringType.ROUNDS -> TODO()
+                GameTopAppBar()
             }
         }
 
@@ -203,7 +215,8 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(8.dp, 8.dp)
             ) {
-                determineLayout()
+                if(!isComplete.value)
+                    gamePageScoringLayout()
 
                 item {
                     Text(text = "Leaderboard", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
@@ -215,17 +228,7 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
         }
     }
 
-    @Composable
-    fun FinishGameButton() {
-        FloatingActionButton(
-            onClick = {  isComplete.value = true },
-            backgroundColor = Purple500,
-        ) {
-            Icon(Icons.Filled.Check, "Game")
-        }
-    }
-
-    private fun LazyListScope.scoreCard() {
+    protected fun LazyListScope.scoreCard() {
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -252,11 +255,44 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                 )
             }
         }
+
         items(playerScores.keys.toList()) { player -> PlayerCard(cardName = player) }
     }
 
-    private fun updateScore(playerName: String, amount: Int = 1) {
-        playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
+    @Composable
+    protected open fun ScoreUpdateInputs(cardName: String) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background)
+                .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+        ) {
+            Button(
+                onClick = { updateScore(playerName = cardName, -1) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
+                border = BorderStroke(0.dp, MaterialTheme.colors.background),
+                shape = RectangleShape,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f, true)
+            ) {
+                Text(text = "-", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colors.onSurface)
+            }
+
+            Button(
+                onClick = { updateScore(playerName = cardName) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
+                border = BorderStroke(0.dp, MaterialTheme.colors.background),
+                shape = RectangleShape,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f, true)
+            ) {
+                Text(text = "+", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colors.onSurface)
+            }
+        }
     }
 
     @Composable
@@ -316,37 +352,7 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                     .fillMaxHeight()
                     .weight(3f, true)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colors.background)
-                        .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
-                ) {
-                    Button(
-                        onClick = { updateScore(playerName = cardName, -1) },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
-                        border = BorderStroke(0.dp, MaterialTheme.colors.background),
-                        shape = RectangleShape,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f, true)
-                    ) {
-                        Text(text = "-", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colors.onSurface)
-                    }
-                    Button(
-                        onClick = { updateScore(playerName = cardName) },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
-                        border = BorderStroke(0.dp, MaterialTheme.colors.background),
-                        shape = RectangleShape,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f, true)
-                    ) {
-                        Text(text = "+", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colors.onSurface)
-                    }
-                }
+                ScoreUpdateInputs(cardName)
             }
         }
     }
@@ -404,17 +410,18 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
     }
 
     @Composable
-    private fun RowScope.podium(players: MutableMap<String, Int>, placeOrder: Array<PodiumPlace>) {
-        val maxHeight = 0.85f;
-        val minHeight = 0.5f;
-        val shadowMax = 8.0f;
-        val shadowMin = 2.0f;
-
+    private fun RowScope.Podium(players: MutableMap<String, Int>,
+                                placeOrder: Array<PodiumPlace>,
+                                podiumMaxHeight: Float = 0.85f,
+                                podiumMinHeight: Float = 0.5f,
+                                podiumShadowMax: Float = 8.0f,
+                                podiumShadowMin: Float = 2.0f
+    ) {
         val localDensity = LocalDensity.current;
 
         val weight = 1.0f / placeOrder.size
-        val heightDecrease = (maxHeight - minHeight) / (placeOrder.size - 1)
-        val shadowDecrease = (shadowMax - shadowMin) / (placeOrder.size - 1)
+        val heightDecrease = (podiumMaxHeight - podiumMinHeight) / (placeOrder.size - 1)
+        val shadowDecrease = (podiumShadowMax - podiumShadowMin) / (placeOrder.size - 1)
         val playerNames = players.keys.toList();
 
         // Print out the places
@@ -451,8 +458,8 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                         contentAlignment = Alignment.BottomCenter,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(maxHeight - (rankIndex - 1) * heightDecrease)
-                            .shadow((shadowMax - shadowDecrease * (rankIndex - 1)).dp)
+                            .fillMaxHeight(podiumMaxHeight - (rankIndex - 1) * heightDecrease)
+                            .shadow((podiumShadowMax - shadowDecrease * (rankIndex - 1)).dp)
                             .background(
                                 color = colorResource(PodiumPlace.values()[rankIndex - 1].colorId),
                                 RoundedCornerShape(4)
@@ -461,8 +468,11 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                                 podiumHeight = with(localDensity) { pos.size.height.toDp() }
                             }
                     ) {
-                        Text(text = players[playerName].toString(), fontWeight = FontWeight.Black, color = Purple500, modifier = Modifier
-                            .padding(16.dp))
+                        Text(
+                            text = players[playerName].toString(),
+                            fontWeight = FontWeight.Black,
+                            color = Purple500,
+                            modifier = Modifier.padding(16.dp))
                     }
                 }
             }
@@ -481,7 +491,7 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
                 Row(modifier = Modifier
                     .fillMaxSize()
                     .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 0.dp), verticalAlignment = Alignment.Bottom) {
-                    podium(sortedPlayers, podiumPlaces);
+                    Podium(sortedPlayers, podiumPlaces);
                 }
             }
 
@@ -518,7 +528,8 @@ class Game(var name: String, players: List<String>, val type: ScoringType) : jav
             }
         }
 
-        itemsIndexed(sortedPlayers.keys.toList().subList(min(podiumPlaces.size, sortedPlayers.size), sortedPlayers.size)) { index, player ->
+        val nonPodiumPlayers = sortedPlayers.keys.toList().subList(min(podiumPlaces.size, sortedPlayers.size), sortedPlayers.size)
+        itemsIndexed(nonPodiumPlayers) { index, player ->
             run {
                 PlayerLeaderboardCard(cardName = player, rank = podiumPlaces.size + index + 1)
             }
