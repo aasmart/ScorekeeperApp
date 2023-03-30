@@ -68,13 +68,14 @@ class SingleWinRoundGame(name: String, players: List<String>) : Game(name, playe
         }
     }
 
-    override fun LazyListScope.gamePageScoringLayout() {
+    @OptIn(ExperimentalMaterialApi::class)
+    override fun LazyListScope.gamePageScoringLayout(nameSortingModalState: ModalBottomSheetState) {
         item {
             Text(text = "Current Round", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard()
+        scoreCard(nameSortingModalState)
 
         item {
             Text(text = "Previous Rounds", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))

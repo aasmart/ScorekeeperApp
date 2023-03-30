@@ -183,7 +183,7 @@ fun NewGameModal(appViewModel: AppViewModel) {
                 }
         ) {
             Text(text = name, fontSize = 18.sp, modifier = Modifier.weight(1f, true))
-            Icon(Icons.Filled.Close, "Remove player", tint = MaterialTheme.colors.error)
+            Icon(Icons.Filled.Remove, "Remove player", tint = MaterialTheme.colors.error)
         }
 
     }
@@ -369,6 +369,13 @@ fun NewGameModal(appViewModel: AppViewModel) {
                                     Toast.makeText(context, "Invalid game name", Toast.LENGTH_SHORT).show()
                                     return@Button;
                                 }
+
+                                val minPlayers = Game.ScoringType.values()[selectedIndex.value].minPlayers
+                                if(players.size < minPlayers) {
+                                    Toast.makeText(context, "This game requires at least $minPlayers player ${if(minPlayers == 1) "" else "s"}", Toast.LENGTH_SHORT).show()
+                                    return@Button;
+                                }
+
                                 appViewModel.addNewGame(gameName.value, players.toList(), Game.ScoringType.values()[selectedIndex.value])
                             },
                             elevation = ButtonDefaults.elevation(defaultElevation = 2.dp),

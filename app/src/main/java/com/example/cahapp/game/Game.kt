@@ -2,16 +2,15 @@ package com.example.cahapp.game
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,14 +30,16 @@ import com.example.cahapp.R
 import com.example.cahapp.TitleText
 import com.example.cahapp.ui.theme.Purple500
 import com.example.cahapp.ui.theme.Purple700
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.lang.Integer.min
 
 open class Game(var name: String, players: List<String>) : java.io.Serializable {
-    private val playerScores = mutableStateMapOf<String, Int>();
-    private val isComplete = mutableStateOf(false);
-    private var appViewModel: AppViewModel? = null;
-    private val podiumPlaces =  arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD);
+    private val playerScores = mutableStateMapOf<String, Int>()
+    private val playerSortOrder = mutableStateOf(SortingOrder.ALPHABETICAL)
+    private val isComplete = mutableStateOf(false)
+    private var appViewModel: AppViewModel? = null
+    private val podiumPlaces =  arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
 
     init {
         players.forEach { name ->
@@ -46,7 +47,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         }
     }
 
-    enum class ScoringType(val readableName: String) {
+    enum class ScoringType(val readableName: String, val minPlayers: Int = 1) {
         SIMPLE_SCORING("Simple Scoring"),
         ROUNDS_SINGLE("Round Scoring: Single Winner")
     }
@@ -55,6 +56,18 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         FIRST(1, R.color.gold),
         SECOND(2, R.color.silver),
         THIRD(3, R.color.bronze)
+    }
+
+    enum class SortingOrder(val readableName: String) {
+        ALPHABETICAL(readableName = "Alphabetical Order"),
+        REVERSE_ALPHABETICAL(readableName = "Reverse Alphabetical Order")
+    }
+
+    private fun sortPlayerNames(): Map<String, Int> {
+        return when (playerSortOrder.value) {
+            SortingOrder.ALPHABETICAL -> playerScores.toList().sortedBy { (name, _) -> name }.toMap()
+            SortingOrder.REVERSE_ALPHABETICAL -> playerScores.toList().sortedByDescending { (name, _) -> name }.toMap()
+        }
     }
 
     protected fun updateScore(playerName: String, amount: Int = 1) {
@@ -180,15 +193,17 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         }
     }
 
-    protected open fun LazyListScope.gamePageScoringLayout() {
+    @OptIn(ExperimentalMaterialApi::class)
+    protected open fun LazyListScope.gamePageScoringLayout(nameSortingModalState: ModalBottomSheetState) {
         item {
             Text(text = "Scoring", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard()
+        scoreCard(nameSortingModalState)
     }
 
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     fun GamePage() {
         @Composable
@@ -200,6 +215,10 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 GameTopAppBar()
             }
         }
+
+        val nameSortingModalState = rememberModalBottomSheetState(
+            ModalBottomSheetValue.Hidden
+        )
 
         Scaffold(
             topBar = { TopBar() },
@@ -216,7 +235,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 contentPadding = PaddingValues(8.dp, 8.dp)
             ) {
                 if(!isComplete.value)
-                    gamePageScoringLayout()
+                    gamePageScoringLayout(nameSortingModalState)
 
                 item {
                     Text(text = "Leaderboard", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
@@ -226,9 +245,57 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 leaderboard()
             }
         }
+
+        NameSortBottomModal(nameSortingModalState)
     }
 
-    protected fun LazyListScope.scoreCard() {
+    @OptIn(ExperimentalMaterialApi::class)
+    @Composable
+    private fun SortTypeForm(nameSortingModalState: ModalBottomSheetState) {
+        val coroutineScope = rememberCoroutineScope()
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            SortingOrder.values().forEach {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = it == playerSortOrder.value,
+                            onClick = { playerSortOrder.value = it }
+                        )
+                ) {
+                    RadioButton(
+                        selected = (it == playerSortOrder.value),
+                        onClick = { playerSortOrder.value = it }
+                    )
+                    Text(
+                        text = it.readableName,
+                        style = MaterialTheme.typography.body1.merge(),
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    @Composable
+    private fun NameSortBottomModal(nameSortingModalState: ModalBottomSheetState) {
+        ModalBottomSheetLayout(
+            sheetState = nameSortingModalState,
+            sheetContent = {
+                SortTypeForm(nameSortingModalState)
+            }
+        ) {}
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    protected fun LazyListScope.scoreCard(nameSortingModalState: ModalBottomSheetState) {
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -239,24 +306,38 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                     .height(45.dp)
                     .shadow(1.dp)
             ) {
+                val coroutineScope = rememberCoroutineScope()
+
+                Icon(Icons.Filled.Sort, "Sort Players", modifier = Modifier
+                    .weight(10f)
+                    .clickable {
+                        coroutineScope.launch {
+                            if (nameSortingModalState.isVisible)
+                                nameSortingModalState.hide()
+                            else
+                                nameSortingModalState.show()
+                        }
+                    })
                 Text(
-                    text = "PLAYER",
+                    text = "Player",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .zIndex(1f)
+                        .weight(55f)
                 )
                 Text(
-                    text = "SCORE",
+                    text = "Score",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .zIndex(1f)
+                        .weight(35f)
                 )
             }
         }
 
-        items(playerScores.keys.toList()) { player -> PlayerCard(cardName = player) }
+        items(sortPlayerNames().keys.toList()) { player -> PlayerCard(cardName = player) }
     }
 
     @Composable
@@ -319,14 +400,14 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 ) {
                     Box(
                         modifier = Modifier
-                            .weight(1f, true)
+                            .weight(3f, true)
                             .background(Purple500)
                             .fillMaxHeight()
                     )
                     Text(
                         text = cardName,
                         modifier = Modifier
-                            .weight(10f, true)
+                            .weight(14f, true)
                             .fillMaxWidth()
                             .padding(12.dp, 0.dp),
                         fontSize = 24.sp,
