@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Sort
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -86,7 +87,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
             elevation = 10.dp,
             modifier = Modifier
                 //.border(2.dp, Purple700, RoundedCornerShape(10))
-                .height(240.dp)
+                .height(250.dp)
                 .fillMaxWidth()
                 .width(IntrinsicSize.Max)
                 .height(IntrinsicSize.Max)
@@ -124,8 +125,23 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                         Text(text = "Game Status: ", fontWeight = FontWeight.Black)
                         Text(text = (if (isComplete.value) "Finished" else "In Progress"))
                     }
-                    Column() {
-                        Text(text = "Leaderboard:", fontWeight = FontWeight.Black)
+                }
+
+                val sortedPlayers = playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
+                Box(modifier = Modifier
+                    .padding(4.dp)
+                    .fillMaxSize()
+                    .border(2.dp, MaterialTheme.colors.background, RoundedCornerShape(14))
+                    .clipToBounds()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 24.dp, end = 24.dp, top = 40.dp, bottom = 0.dp)
+                            .offset(y = 10.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Podium(sortedPlayers, podiumPlaces);
                     }
                 }
 
@@ -249,11 +265,8 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         NameSortBottomModal(nameSortingModalState)
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    private fun SortTypeForm(nameSortingModalState: ModalBottomSheetState) {
-        val coroutineScope = rememberCoroutineScope()
-
+    private fun SortTypeForm() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -289,7 +302,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         ModalBottomSheetLayout(
             sheetState = nameSortingModalState,
             sheetContent = {
-                SortTypeForm(nameSortingModalState)
+                SortTypeForm()
             }
         ) {}
     }
@@ -553,6 +566,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                             text = players[playerName].toString(),
                             fontWeight = FontWeight.Black,
                             color = Purple500,
+                            fontSize = 16.sp,
                             modifier = Modifier.padding(16.dp))
                     }
                 }
