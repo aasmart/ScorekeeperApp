@@ -28,7 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.cahapp.game.Game
+import com.example.cahapp.game.types.Game
 import com.example.cahapp.ui.theme.CAHAppTheme
 import com.example.cahapp.ui.theme.Purple500
 import com.example.cahapp.ui.theme.Purple700
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppMain(appViewModel: AppViewModel = viewModel()) {
     val appUiState by appViewModel.uiState.collectAsState()
-    val context = LocalContext.current;
+    val context = LocalContext.current
 
 //    context.openFileOutput("games", Context.MODE_PRIVATE).use {
 //        it.write(appViewModel.getGames()[0].toJson().toString().toByteArray())
@@ -110,7 +110,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         exit = slideOutHorizontally() { maxWidth -> maxWidth / 3 } + fadeOut()
     ) {
         BackHandler(enabled = true) {
-            appViewModel.setFocusedGameVisible(false);
+            appViewModel.setFocusedGameVisible(false)
         }
         appUiState.focusedGame?.GamePage()
     }
@@ -159,7 +159,7 @@ fun NewGameButton(addGame: () -> Unit) {
 )
 @Composable
 fun NewGameModal(appViewModel: AppViewModel) {
-    val context = LocalContext.current;
+    val context = LocalContext.current
 
     // The name for the new game being created
     val gameName = remember { mutableStateOf("") }
@@ -238,7 +238,6 @@ fun NewGameModal(appViewModel: AppViewModel) {
                             .weight(10f, true),
                     )
 
-                    /* TODO make arrow work, fix text. amd make whole thing clickable*/
                     Box(modifier = Modifier
                         .weight(10f, true)
                         .fillMaxWidth()) {
@@ -249,7 +248,7 @@ fun NewGameModal(appViewModel: AppViewModel) {
                             }
                         ) {
                             TextField(
-                                value = Game.ScoringType.values()[selectedIndex.value].readableName,
+                                value = AppViewModel.ScoringType.values()[selectedIndex.value].readableName,
                                 onValueChange = {},
                                 label = { Text(text = stringResource(R.string.game_preset)) },
                                 readOnly = true,
@@ -262,11 +261,11 @@ fun NewGameModal(appViewModel: AppViewModel) {
                                 onDismissRequest = { expanded.value = false },
                                 modifier = Modifier.width(IntrinsicSize.Max)
                             ) {
-                                Game.ScoringType.values().forEachIndexed { index, enum ->
+                                AppViewModel.ScoringType.values().forEachIndexed { index, enum ->
                                     DropdownMenuItem(onClick = {
-                                        selectedIndex.value = index;
+                                        selectedIndex.value = index
                                         expanded.value = !expanded.value
-                                        Toast.makeText(context, Game.ScoringType.values()[selectedIndex.value].readableName, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, AppViewModel.ScoringType.values()[selectedIndex.value].readableName, Toast.LENGTH_SHORT).show()
                                     }) {
                                         Text(enum.readableName)
                                     }
@@ -307,12 +306,12 @@ fun NewGameModal(appViewModel: AppViewModel) {
                         fun addPlayerToGame() {
                             if(!isValidName(playerName.value))  {
                                 Toast.makeText(context, "Name must be within valid size.", Toast.LENGTH_SHORT).show()
-                                return;
+                                return
                             }
 
                             if(players.contains(playerName.value)) {
                                 Toast.makeText(context, "There is already a player with this name.", Toast.LENGTH_SHORT).show()
-                                return;
+                                return
                             }
 
                             players.add(playerName.value)
@@ -367,16 +366,16 @@ fun NewGameModal(appViewModel: AppViewModel) {
                             onClick = {
                                 if(!isValidName(gameName.value)) {
                                     Toast.makeText(context, "Invalid game name", Toast.LENGTH_SHORT).show()
-                                    return@Button;
+                                    return@Button
                                 }
 
-                                val minPlayers = Game.ScoringType.values()[selectedIndex.value].minPlayers
+                                val minPlayers = AppViewModel.ScoringType.values()[selectedIndex.value].minPlayers
                                 if(players.size < minPlayers) {
                                     Toast.makeText(context, "This game requires at least $minPlayers player ${if(minPlayers == 1) "" else "s"}", Toast.LENGTH_SHORT).show()
-                                    return@Button;
+                                    return@Button
                                 }
 
-                                appViewModel.addNewGame(gameName.value, players.toList(), Game.ScoringType.values()[selectedIndex.value])
+                                appViewModel.addNewGame(gameName.value, players.toList(), AppViewModel.ScoringType.values()[selectedIndex.value])
                             },
                             elevation = ButtonDefaults.elevation(defaultElevation = 2.dp),
                             modifier = Modifier.weight(1f)

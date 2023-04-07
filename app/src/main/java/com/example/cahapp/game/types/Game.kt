@@ -1,4 +1,4 @@
-package com.example.cahapp.game
+package com.example.cahapp.game.types
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -36,7 +36,7 @@ import org.json.JSONObject
 import java.lang.Integer.min
 
 open class Game(var name: String, players: List<String>) : java.io.Serializable {
-    private val playerScores = mutableStateMapOf<String, Int>()
+    protected val playerScores = mutableStateMapOf<String, Int>()
     private val playerSortOrder = mutableStateOf(SortingOrder.ALPHABETICAL)
     private val isComplete = mutableStateOf(false)
     private var appViewModel: AppViewModel? = null
@@ -46,11 +46,6 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         players.forEach { name ->
             playerScores[name] = 0
         }
-    }
-
-    enum class ScoringType(val readableName: String, val minPlayers: Int = 1) {
-        SIMPLE_SCORING("Simple Scoring"),
-        ROUNDS_SINGLE("Round Scoring: Single Winner")
     }
 
     enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
@@ -78,7 +73,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun GetAsCard(appViewModel: AppViewModel) {
-        this.appViewModel = appViewModel;
+        this.appViewModel = appViewModel
 
         var expanded by remember { mutableStateOf(false) }
 
@@ -141,7 +136,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                             .offset(y = 10.dp),
                         verticalAlignment = Alignment.Bottom
                     ) {
-                        Podium(sortedPlayers, podiumPlaces);
+                        Podium(sortedPlayers, podiumPlaces)
                     }
                 }
 
@@ -511,19 +506,19 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                                 podiumShadowMax: Float = 8.0f,
                                 podiumShadowMin: Float = 2.0f
     ) {
-        val localDensity = LocalDensity.current;
+        val localDensity = LocalDensity.current
 
         val weight = 1.0f / placeOrder.size
         val heightDecrease = (podiumMaxHeight - podiumMinHeight) / (placeOrder.size - 1)
         val shadowDecrease = (podiumShadowMax - podiumShadowMin) / (placeOrder.size - 1)
-        val playerNames = players.keys.toList();
+        val playerNames = players.keys.toList()
 
         // Print out the places
         for (place in placeOrder) {
-            val rankIndex = place.rankingInt;
+            val rankIndex = place.rankingInt
 
             if(playerNames.size <= rankIndex - 1)
-                continue;
+                continue
 
             val playerName = playerNames[rankIndex - 1]
             Box(
@@ -586,7 +581,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 Row(modifier = Modifier
                     .fillMaxSize()
                     .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 0.dp), verticalAlignment = Alignment.Bottom) {
-                    Podium(sortedPlayers, podiumPlaces);
+                    Podium(sortedPlayers, podiumPlaces)
                 }
             }
 
