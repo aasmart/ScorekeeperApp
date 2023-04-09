@@ -1,4 +1,4 @@
-package com.example.cahapp.game.types
+package com.example.scorekeeper.game.types
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,9 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.cahapp.game.Round
-import com.example.cahapp.ui.theme.Purple200
-import com.example.cahapp.ui.theme.Purple500
+import com.example.scorekeeper.game.Round
+import com.example.scorekeeper.ui.theme.Purple200
+import com.example.scorekeeper.ui.theme.Purple500
 
 open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, players) {
     val rounds = mutableStateListOf<Round>()
@@ -52,7 +52,7 @@ open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, 
                         .zIndex(1f)
                 )
                 Text(
-                    text = "Placments",
+                    text = "Placements",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier

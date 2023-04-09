@@ -1,10 +1,10 @@
-package com.example.cahapp
+package com.example.scorekeeper
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import com.example.cahapp.game.types.Game
-import com.example.cahapp.game.types.RankedRoundGame
-import com.example.cahapp.game.types.SingleWinRoundGame
+import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.RankedRoundGame
+import com.example.scorekeeper.game.types.SingleWinRoundGame
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

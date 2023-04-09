@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CAHApp</string>
+    <string name="app_name">Scorekeeper</string>
     <string name="cancel">Cancel</string>
     <string name="create_game">Confirm</string>
     <string name="game_name">Game Name</string>

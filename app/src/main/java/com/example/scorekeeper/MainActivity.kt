@@ -1,4 +1,4 @@
-package com.example.cahapp
+package com.example.scorekeeper
 
 import android.os.Bundle
 import android.widget.Toast
@@ -28,10 +28,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.cahapp.game.types.Game
-import com.example.cahapp.ui.theme.CAHAppTheme
-import com.example.cahapp.ui.theme.Purple500
-import com.example.cahapp.ui.theme.Purple700
+import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.ui.theme.CAHAppTheme
+import com.example.scorekeeper.ui.theme.Purple500
+import com.example.scorekeeper.ui.theme.Purple700
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +69,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TitleText("Game Night Scorekeeper")
+                    TitleText(stringResource(R.string.app_name))
                 }
             }
         },

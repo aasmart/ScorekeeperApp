@@ -1,4 +1,4 @@
-package com.example.cahapp.game.types
+package com.example.scorekeeper.game.types
 
 import android.content.Context
 import android.widget.Toast
@@ -12,8 +12,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.cahapp.R
-import com.example.cahapp.game.Round
+import com.example.scorekeeper.R
+import com.example.scorekeeper.game.Round
 
 class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(name, players) {
     private val playerRoundPlacements = mutableStateMapOf<String, Int>()
@@ -27,7 +27,7 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
     private fun finishRound(context: Context) {
         if(playerRoundPlacements.values.indexOf(0) >= 0) {
             Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
-            return;
+            return
         }
 
         playerRoundPlacements.forEach { (player, rank) -> updateScore(player, playerRoundPlacements.size - (rank-1)) }

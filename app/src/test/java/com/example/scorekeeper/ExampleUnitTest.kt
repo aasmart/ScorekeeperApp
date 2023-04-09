@@ -1,4 +1,4 @@
-package com.example.cahapp
+package com.example.scorekeeper
 
 import org.junit.Test
 

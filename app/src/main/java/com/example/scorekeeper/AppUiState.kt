@@ -1,6 +1,6 @@
-package com.example.cahapp
+package com.example.scorekeeper
 
-import com.example.cahapp.game.types.Game
+import com.example.scorekeeper.game.types.Game
 
 data class AppUiState(
     val gameCards: List<Game>,

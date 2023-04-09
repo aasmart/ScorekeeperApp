@@ -1,4 +1,4 @@
-package com.example.cahapp.game.types
+package com.example.scorekeeper.game.types
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -26,11 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.cahapp.AppViewModel
-import com.example.cahapp.R
-import com.example.cahapp.TitleText
-import com.example.cahapp.ui.theme.Purple500
-import com.example.cahapp.ui.theme.Purple700
+import com.example.scorekeeper.AppViewModel
+import com.example.scorekeeper.R
+import com.example.scorekeeper.TitleText
+import com.example.scorekeeper.ui.theme.Purple500
+import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.lang.Integer.min
