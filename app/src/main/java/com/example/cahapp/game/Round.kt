@@ -16,14 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cahapp.ui.theme.Purple500
 
-class Round(private val winners: Array<String>) {
+class Round(private val placements: Map<String, Int>) {
     @Composable
     fun GetRoundCard(roundIndex: Int) {
         Card(
             shape = RoundedCornerShape(10),
             elevation = 4.dp,
             modifier = Modifier
-                .height(60.dp)
+                .height(IntrinsicSize.Min)
                 .fillMaxWidth()
                 .padding(0.dp, 0.dp, 0.dp, 0.dp)
                 .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
@@ -47,15 +47,20 @@ class Round(private val winners: Array<String>) {
                         fontSize = 24.sp,
                     )
                 }
-                Text(
-                    text = winners.joinToString(separator = ", "),
-                    modifier = Modifier
-                        .weight(10f, true)
+                Column(
+                    modifier = Modifier.weight(10f, true)
                         .fillMaxWidth()
                         .padding(10.dp, 0.dp),
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Start
-                )
+                ) {
+                    placements.toList().sortedBy { (_, value) -> value }.map { (key, _) -> key }.forEach {
+                        Text(
+                            text = "${placements[it]}. $it",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                }
+
             }
         }
     }

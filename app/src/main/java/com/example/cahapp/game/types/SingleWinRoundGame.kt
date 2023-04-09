@@ -1,4 +1,4 @@
-package com.example.cahapp.game
+package com.example.cahapp.game.types
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,19 +19,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.cahapp.game.Round
 import com.example.cahapp.ui.theme.Purple200
 import com.example.cahapp.ui.theme.Purple500
 
-class SingleWinRoundGame(name: String, players: List<String>) : Game(name, players) {
-    private val rounds = mutableStateListOf<Round>()
+open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, players) {
+    val rounds = mutableStateListOf<Round>()
     private val roundDisplayCollapsed = mutableStateOf(false)
 
-    private fun scoreUpdateInteract(cardName: String) {
+    open fun scoreUpdateInteract(cardName: String) {
         updateScore(playerName = cardName, 1)
-        rounds.add(Round(arrayOf(cardName)))
+        rounds.add(Round(mapOf(Pair(cardName, 1))))
     }
 
-    private fun LazyListScope.previousRoundDisplay() {
+    fun LazyListScope.previousRoundDisplay() {
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -51,7 +52,7 @@ class SingleWinRoundGame(name: String, players: List<String>) : Game(name, playe
                         .zIndex(1f)
                 )
                 Text(
-                    text = "Winner",
+                    text = "Placments",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier

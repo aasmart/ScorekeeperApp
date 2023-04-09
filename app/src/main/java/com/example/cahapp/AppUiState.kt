@@ -1,6 +1,6 @@
 package com.example.cahapp
 
-import com.example.cahapp.game.Game
+import com.example.cahapp.game.types.Game
 
 data class AppUiState(
     val gameCards: List<Game>,
