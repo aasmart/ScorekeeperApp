@@ -1,5 +1,7 @@
 package com.example.cahapp.game.types
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.*
@@ -22,14 +24,15 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
         placementNumbers = (1..playerRoundPlacements.size).toList()
     }
 
-    private fun finishRound() {
+    private fun finishRound(context: Context) {
         if(playerRoundPlacements.values.indexOf(0) >= 0) {
+            Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
             return;
         }
 
         playerRoundPlacements.forEach { (player, rank) -> updateScore(player, playerRoundPlacements.size - (rank-1)) }
+        rounds.add(Round(playerRoundPlacements.toMutableMap()))
         playerScores.forEach {(player, _) -> playerRoundPlacements[player] = 0 }
-        rounds.add(Round(playerRoundPlacements.keys.toTypedArray()))
     }
 
     @OptIn(ExperimentalMaterialApi::class)
@@ -42,10 +45,14 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
         scoreCard(nameSortingModalState)
 
         item {
-            Button(onClick = { finishRound() },
+            val context = LocalContext.current
+
+            Button(
+                onClick = { finishRound(context) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant, contentColor = MaterialTheme.colors.onSurface),
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
-                Text(text = "Finish Round")
+                Text(text = "Finish Round", fontSize = MaterialTheme.typography.button.fontSize)
             }
         }
 
@@ -94,7 +101,7 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
                             // If there is, swap their places
                             val placeIndex = playerRoundPlacements.values.indexOf(place)
                             if(placeIndex >= 0)
-                                playerRoundPlacements[playerRoundPlacements.keys.toList()[placeIndex]] = playerRoundPlacements[cardName]!!.toInt()
+                                playerRoundPlacements[playerRoundPlacements.toList()[placeIndex].first] = playerRoundPlacements[cardName]!!.toInt()
 
                             playerRoundPlacements[cardName] = place
                             //Toast.makeText(context, Game.ScoringType.values()[selectedIndex.value].readableName, Toast.LENGTH_SHORT).show()

@@ -29,7 +29,7 @@ open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, 
 
     open fun scoreUpdateInteract(cardName: String) {
         updateScore(playerName = cardName, 1)
-        rounds.add(Round(arrayOf(cardName)))
+        rounds.add(Round(mapOf(Pair(cardName, 1))))
     }
 
     fun LazyListScope.previousRoundDisplay() {
@@ -52,7 +52,7 @@ open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, 
                         .zIndex(1f)
                 )
                 Text(
-                    text = "Winner",
+                    text = "Placments",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -96,7 +96,7 @@ open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, 
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Text(text = "Ranking", fontWeight = FontWeight.Black, fontSize = 20.sp, color = MaterialTheme.colors.onSurface)
+            Text(text = "Winner", fontWeight = FontWeight.Black, fontSize = 20.sp, color = MaterialTheme.colors.onSurface)
         }
     }
 }

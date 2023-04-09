@@ -198,9 +198,9 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     private fun FinishGameButton() {
         FloatingActionButton(
             onClick = {  isComplete.value = true },
-            backgroundColor = Purple500,
+            backgroundColor = MaterialTheme.colors.primaryVariant,
         ) {
-            Icon(Icons.Filled.Check, "Game")
+            Icon(Icons.Filled.Check, "Game", tint = MaterialTheme.colors.onSurface)
         }
     }
 
