@@ -69,6 +69,7 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
     override fun ScoreUpdateInputs(cardName: String) {
         val expanded = remember { mutableStateOf(false) }
         val selectedIndex = remember { mutableStateOf(0) }
+        val context = LocalContext.current
 
         Box(modifier = Modifier.fillMaxSize()) {
             ExposedDropdownMenuBox(
@@ -104,7 +105,7 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
                                 playerRoundPlacements[playerRoundPlacements.toList()[placeIndex].first] = playerRoundPlacements[cardName]!!.toInt()
 
                             playerRoundPlacements[cardName] = place
-                            //Toast.makeText(context, Game.ScoringType.values()[selectedIndex.value].readableName, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Set $cardName's place to $place", Toast.LENGTH_SHORT).show()
                         }) {
                             Text(place.toString())
                         }
