@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Sort
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -123,21 +124,28 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 }
 
                 val sortedPlayers = playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
-                Box(modifier = Modifier
-                    .padding(4.dp)
+                Column(modifier = Modifier
+                    .padding(start = 0.dp, end = 0.dp, bottom = 0.dp, top = 0.dp)
                     .fillMaxSize()
-                    .border(2.dp, MaterialTheme.colors.background, RoundedCornerShape(14))
                     .clipToBounds()
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(start = 24.dp, end = 24.dp, top = 40.dp, bottom = 0.dp)
-                            .offset(y = 10.dp),
+                            .weight(96f)
+                            .padding(start = 20.dp, end = 20.dp, top = 36.dp, bottom = 0.dp)
+                            .offset(y = 5.dp),
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Podium(sortedPlayers, podiumPlaces)
                     }
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(4f)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colors.primaryVariant)
+                        .zIndex(10f)
+                        .shadow(6.dp)
+                    )
                 }
 
                 DropdownMenu(
