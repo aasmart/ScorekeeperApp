@@ -33,6 +33,9 @@ import com.example.scorekeeper.ui.theme.Purple700
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.decorView.setBackgroundResource(R.color.black)
+
         setContent {
             CAHAppTheme {
                 // A surface container using the 'background' color from the theme
@@ -43,12 +46,6 @@ class MainActivity : ComponentActivity() {
                     AppMain()
                 }
             }
-        }
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view, insets ->
-            val bottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            view.updatePadding(bottom = bottom)
-            insets
         }
     }
 }
@@ -87,7 +84,8 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
             NewGameButton { appViewModel.toggleGameModal() }
         },
         floatingActionButtonPosition = FabPosition.Center,
-        isFloatingActionButtonDocked = true
+        isFloatingActionButtonDocked = true,
+        backgroundColor = MaterialTheme.colors.background
     ) {
         Box(modifier = Modifier.padding(it)) {
             Column(

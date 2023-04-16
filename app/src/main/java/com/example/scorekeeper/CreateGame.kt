@@ -2,7 +2,14 @@ package com.example.scorekeeper
 
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +23,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -51,8 +59,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -60,8 +70,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.scorekeeper.listeners.rememberImeState
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class CreateGameForm(private val appViewModel: AppViewModel) {
     private val gameName = mutableStateOf("")
@@ -70,7 +83,7 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
     private val selectedIndex = mutableStateOf(0)
 
     private val INPUT_FIELD_HEIGHT = 56.dp
-    private val PLAYER_LIST_HEIGHT = 280.dp
+    private val PLAYER_LIST_HEIGHT = 300.dp
 
     fun isValidLength(str: String, min: Int, max: Int = Int.MAX_VALUE): Boolean {
         return str.length in min..max
@@ -220,9 +233,12 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
         }
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     private fun PlayerInput() {
         val context = LocalContext.current
+        val bringIntoViewRequester = remember { BringIntoViewRequester() }
+        val coroutineScope = rememberCoroutineScope()
 
         Card(
             shape = RoundedCornerShape(3.dp),
@@ -298,6 +314,14 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(5f, true)
+                    .bringIntoViewRequester(bringIntoViewRequester)
+                    .onFocusEvent { focusState ->
+                        if (focusState.isFocused) {
+                            coroutineScope.launch {
+                                bringIntoViewRequester.bringIntoView()
+                            }
+                        }
+                    },
             )
 
             Button(
@@ -318,33 +342,33 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
         }
     }
 
-    // TODO General cleanup, improve length function, fix keyboard overlap,
+    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun Modal() {
+        val imeState = rememberImeState()
+
         Scaffold(
             topBar = { TopAppBar() },
             floatingActionButton = {
-                FinishGameButton()
+                if(!imeState.value)
+                    FinishGameButton()
             },
-            bottomBar = {
-                BottomAppBar(
-                    backgroundColor = Purple700
-                ) {
-
-                }
-            },
-            floatingActionButtonPosition = FabPosition.Center,
-            isFloatingActionButtonDocked = true
+            floatingActionButtonPosition = FabPosition.End,
+            backgroundColor = MaterialTheme.colors.background
         ) {
-            Box(modifier = Modifier.padding(it)) {
+            Box(modifier = Modifier.fillMaxSize().padding(it).background(MaterialTheme.colors.background)) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
-                        .verticalScroll(rememberScrollState())
                         .fillMaxSize()
-                        .padding(20.dp),
+                        .verticalScroll(rememberScrollState())
+                        .padding(20.dp)
+                        .background(MaterialTheme.colors.background),
                 ) {
+                    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+                    val coroutineScope = rememberCoroutineScope()
+
                     TextField(
                         value = gameName.value,
                         onValueChange = { gameName.value = it },
@@ -353,7 +377,15 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
                         isError = !isValidLength(gameName.value, 1, 24),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(INPUT_FIELD_HEIGHT),
+                            .height(INPUT_FIELD_HEIGHT)
+                            .bringIntoViewRequester(bringIntoViewRequester)
+                            .onFocusEvent { focusState ->
+                                if (focusState.isFocused) {
+                                    coroutineScope.launch {
+                                        bringIntoViewRequester.bringIntoView()
+                                    }
+                                }
+                            },
                     )
 
                     GameTypeDropdown()
