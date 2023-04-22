@@ -1,5 +1,4 @@
 package com.example.scorekeeper.game.types
-
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -33,14 +32,15 @@ import com.example.scorekeeper.TitleText
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Transient
 import org.json.JSONObject
 import java.lang.Integer.min
 
-open class Game(var name: String, players: List<String>) : java.io.Serializable {
+open class Game(var name: String, players: List<String>) {
     protected val playerScores = mutableStateMapOf<String, Int>()
     private val playerSortOrder = mutableStateOf(SortingOrder.ALPHABETICAL)
     private val isComplete = mutableStateOf(false)
-    private var appViewModel: AppViewModel? = null
+    @Transient private var appViewModel: AppViewModel? = null
     private val podiumPlaces =  arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
 
     init {
@@ -75,7 +75,6 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     @Composable
     fun GetAsCard(appViewModel: AppViewModel) {
         this.appViewModel = appViewModel
-
         var expanded by remember { mutableStateOf(false) }
 
         Card(
