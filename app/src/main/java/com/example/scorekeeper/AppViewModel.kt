@@ -2,6 +2,7 @@ package com.example.scorekeeper
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import com.example.scorekeeper.game.renderers.GameRenderer
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.game.types.RankedRoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class AppViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(AppUiState(listOf(), false, null, false))
+    private val _uiState = MutableStateFlow(AppUiState(listOf(), false, null))
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
     private val games = mutableStateListOf<Game>()
@@ -22,7 +23,7 @@ class AppViewModel : ViewModel() {
     }
 
     fun toggleGameModal() {
-        _uiState.value = AppUiState(games, !_uiState.value.isCreatingGame, null, false)
+        _uiState.value = AppUiState(games, !_uiState.value.isCreatingGame, null)
     }
 
     fun addNewGame(name: String = "New Game", players: List<String>, type: ScoringType) {
@@ -33,12 +34,12 @@ class AppViewModel : ViewModel() {
         }
 
         games.add(gameNew)
-        _uiState.value = AppUiState(games, false, null, false)
+        _uiState.value = AppUiState(games, false, null)
     }
 
     fun removeGame(game: Game) {
         games.remove(game)
-        _uiState.value = AppUiState(games, false, null, false)
+        _uiState.value = AppUiState(games, false, null)
     }
 
     fun getGames(): List<Game> {
@@ -46,10 +47,10 @@ class AppViewModel : ViewModel() {
     }
 
     fun setFocusedGame(game: Game?) {
-        _uiState.value = AppUiState(games, false, game, false)
-    }
-
-    fun setFocusedGameVisible(visible: Boolean) {
-        _uiState.value = AppUiState(games, false, _uiState.value.focusedGame, visible)
+        _uiState.value = AppUiState(
+            games,
+            false,
+            if (game == null) null else GameRenderer(game, appViewModel = this)
+        )
     }
 }

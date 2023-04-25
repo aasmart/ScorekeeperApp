@@ -24,79 +24,11 @@ import com.example.scorekeeper.ui.theme.Purple200
 import com.example.scorekeeper.ui.theme.Purple500
 
 open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, players) {
-    val rounds = mutableStateListOf<Round>()
-    private val roundDisplayCollapsed = mutableStateOf(false)
+    val rounds = mutableListOf<Round>()
+    var roundDisplayCollapsed = false
 
     open fun scoreUpdateInteract(cardName: String) {
         updateScore(playerName = cardName, 1)
         rounds.add(Round(mapOf(Pair(cardName, 1))))
-    }
-
-    fun LazyListScope.previousRoundDisplay() {
-        item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .background(Purple500, RoundedCornerShape(8))
-                    .fillMaxWidth()
-                    .height(45.dp)
-                    .shadow(1.dp)
-                    .clickable { roundDisplayCollapsed.value = !roundDisplayCollapsed.value }
-            ) {
-                Text(
-                    text = "Round #",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .zIndex(1f)
-                )
-                Text(
-                    text = "Placements",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .zIndex(1f)
-                )
-            }
-        }
-
-        // TODO proper collapsed visuals
-        if(!roundDisplayCollapsed.value) {
-            itemsIndexed(rounds) { index, round ->
-                round.GetRoundCard(roundIndex = index + 1)
-            }
-        }
-    }
-
-    @OptIn(ExperimentalMaterialApi::class)
-    override fun LazyListScope.gamePageScoringLayout(nameSortingModalState: ModalBottomSheetState) {
-        item {
-            Text(text = "Current Round", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
-            Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
-        }
-
-        scoreCard(nameSortingModalState)
-
-        item {
-            Text(text = "Previous Rounds", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
-            Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
-        }
-
-        previousRoundDisplay()
-    }
-
-    @Composable
-    override fun ScoreUpdateInputs(cardName: String) {
-        Button(
-            onClick = { scoreUpdateInteract(cardName) },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Purple200),
-            border = BorderStroke(0.dp, MaterialTheme.colors.background),
-            shape = RectangleShape,
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            Text(text = "Winner", fontWeight = FontWeight.Black, fontSize = 20.sp, color = MaterialTheme.colors.onSurface)
-        }
     }
 }

@@ -5,14 +5,37 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.BottomAppBar
+import androidx.compose.material.FabPosition
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,9 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.scorekeeper.game.renderers.GameRenderer
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.ui.theme.CAHAppTheme
 import com.example.scorekeeper.ui.theme.Purple500
@@ -114,7 +137,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
     }
 
     AnimatedVisibility(
-        visible = appUiState.isFocusedGameVisible,
+        visible = appUiState.gameRenderer != null,
         enter = slideInHorizontally() {
                 maxWidth -> maxWidth / 3
         } + fadeIn(
@@ -124,9 +147,9 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         exit = slideOutHorizontally() { maxWidth -> maxWidth / 3 } + fadeOut()
     ) {
         BackHandler(enabled = true) {
-            appViewModel.setFocusedGameVisible(false)
+            appViewModel.setFocusedGame(null)
         }
-        appUiState.focusedGame?.GamePage()
+        appUiState.gameRenderer?.GamePage()
     }
 }
 
@@ -153,7 +176,7 @@ fun ColumnScope.GameList(appViewModel: AppViewModel, games: List<Game>) {
         contentPadding = PaddingValues(12.dp)
 
     ) {
-        items(games) { game -> game.GetAsCard(appViewModel) }
+        items(games) { game -> GameRenderer.GameCard(game, appViewModel) }
     }
 }
 
