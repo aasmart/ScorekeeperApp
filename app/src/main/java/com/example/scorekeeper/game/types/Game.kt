@@ -1,5 +1,6 @@
 package com.example.scorekeeper.game.types
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -90,7 +91,6 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 .combinedClickable(
                     onClick = {
                         this.appViewModel?.setFocusedGame(this)
-                        this.appViewModel?.setFocusedGameVisible(true)
                     },
                     onLongClick = { expanded = true }
                 )
@@ -167,7 +167,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     private fun GameTopAppBar() {
         Box(modifier = Modifier.fillMaxSize()) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
-                IconButton(onClick = { appViewModel?.setFocusedGameVisible(false) }, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = { appViewModel?.setFocusedGame(null) }, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back",
@@ -222,6 +222,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         scoreCard(nameSortingModalState)
     }
 
+    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
     fun GamePage() {
