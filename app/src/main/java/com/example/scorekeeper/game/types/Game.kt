@@ -34,10 +34,12 @@ import com.example.scorekeeper.TitleText
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import org.json.JSONObject
 import java.lang.Integer.min
 
-open class Game(var name: String, players: List<String>) {
+@Serializable
+open class Game(var name: String) {
     internal var playerScores = mutableMapOf<String, Int>()
     internal var playerSortOrder = SortingOrder.ALPHABETICAL
     internal var isComplete = false
@@ -46,19 +48,19 @@ open class Game(var name: String, players: List<String>) {
         val podiumPlaces = arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
     }
 
-    init {
+    open fun setPlayers(players: List<String>) {
         players.forEach { name ->
             playerScores[name] = 0
         }
     }
 
     open fun copy(): Game {
-        val game = Game(name, listOf())
+        val game = Game(name)
         game.playerScores = playerScores
         game.playerSortOrder = playerSortOrder
         game.isComplete = isComplete
 
-        return game;
+        return game
     }
 
     enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {

@@ -15,18 +15,27 @@ import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
 import com.example.scorekeeper.game.Round
+import kotlinx.serialization.Serializable
 
-class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(name, players) {
+@Serializable
+class RankedRoundGame : SingleWinRoundGame {
+    constructor(name: String) : super(name)
+
     private var playerRoundPlacements = mutableMapOf<String, Int>()
     private var placementNumbers: List<Int>
 
     init {
+        placementNumbers = listOf()
+    }
+
+    override fun setPlayers(players: List<String>) {
+        super.setPlayers(players)
         players.forEach { playerRoundPlacements[it] = 0 }
         placementNumbers = (1..playerRoundPlacements.size).toList()
     }
 
     override fun copy(): RankedRoundGame {
-        val game = RankedRoundGame(name, listOf())
+        val game = RankedRoundGame(name)
         game.name = name
         game.playerScores = playerScores
         game.playerSortOrder = playerSortOrder

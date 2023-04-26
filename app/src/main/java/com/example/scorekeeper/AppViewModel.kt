@@ -27,10 +27,12 @@ class AppViewModel : ViewModel() {
 
     fun addNewGame(name: String = "New Game", players: List<String>, type: ScoringType) {
         val gameNew = when(type) {
-            ScoringType.SIMPLE_SCORING -> Game(name, players)
-            ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name, players)
-            ScoringType.RANKED_SCORING -> RankedRoundGame(name, players)
+            ScoringType.SIMPLE_SCORING -> Game(name)
+            ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name)
+            ScoringType.RANKED_SCORING -> RankedRoundGame(name)
         }
+
+        gameNew.setPlayers(players)
 
         games.add(gameNew)
         _uiState.value = AppUiState(games, false, null)

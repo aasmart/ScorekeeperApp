@@ -21,13 +21,17 @@ import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.game.Round
 import com.example.scorekeeper.ui.theme.Purple200
 import com.example.scorekeeper.ui.theme.Purple500
+import kotlinx.serialization.Serializable
 
-open class SingleWinRoundGame(name: String, players: List<String>) : Game(name, players) {
+@Serializable
+open class SingleWinRoundGame : Game {
+    constructor(name : String) : super(name)
+
     var rounds = mutableListOf<Round>()
     internal var roundDisplayCollapsed = false
 
     override fun copy(): SingleWinRoundGame {
-        val game = SingleWinRoundGame(name, listOf())
+        val game = SingleWinRoundGame(name)
         game.playerScores = playerScores
         game.playerSortOrder = playerSortOrder
         game.isComplete = isComplete
