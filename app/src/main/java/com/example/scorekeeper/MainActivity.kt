@@ -1,6 +1,7 @@
 package com.example.scorekeeper
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -106,7 +107,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         exit = slideOutHorizontally() { maxWidth -> maxWidth / 3 } + fadeOut()
     ) {
         BackHandler(enabled = true) {
-            appViewModel.toggleGameModal();
+            appViewModel.toggleGameModal()
         }
         CreateGameForm(appViewModel).Modal()
     }
@@ -122,13 +123,15 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         exit = slideOutHorizontally() { maxWidth -> maxWidth / 3 } + fadeOut()
     ) {
         BackHandler(enabled = true) {
-            appViewModel.setFocusedGame(null);
+            //appViewModel.setActiveGame(null)
         }
 
         val ref = remember { Ref<Game>() }
 
         ref.value = appUiState.activeGame ?: ref.value
-        ref.value?.GamePage()
+        ref.value?.GamePage(appViewModel)
+
+        Log.wtf("Huh", "Rerendered")
     }
 }
 

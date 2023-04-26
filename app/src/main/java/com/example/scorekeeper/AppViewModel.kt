@@ -45,11 +45,11 @@ class AppViewModel : ViewModel() {
         return games.toList()
     }
 
-    fun setFocusedGame(game: Game?) {
-        _uiState.value = AppUiState(games, false, game)
+    fun setActiveGame(game: Game?) {
+        _uiState.value = AppUiState(games, false, game?.copy())
     }
 
     fun hasFocusedGame(): Boolean {
-        return _uiState.value.activeGame != null;
+        return _uiState.value.activeGame != null
     }
 }

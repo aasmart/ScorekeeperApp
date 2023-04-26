@@ -12,43 +12,60 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
 import com.example.scorekeeper.game.Round
 
 class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(name, players) {
-    private val playerRoundPlacements = mutableStateMapOf<String, Int>()
-    private val placementNumbers: List<Int>
+    private var playerRoundPlacements = mutableMapOf<String, Int>()
+    private var placementNumbers: List<Int>
 
     init {
         players.forEach { playerRoundPlacements[it] = 0 }
         placementNumbers = (1..playerRoundPlacements.size).toList()
     }
 
-    private fun finishRound(context: Context) {
+    override fun copy(): RankedRoundGame {
+        val game = RankedRoundGame(name, listOf())
+        game.name = name
+        game.playerScores = playerScores
+        game.playerSortOrder = playerSortOrder
+        game.isComplete = isComplete
+        game.rounds = rounds
+        game.roundDisplayCollapsed = roundDisplayCollapsed
+        game.playerRoundPlacements = playerRoundPlacements
+        game.placementNumbers = placementNumbers
+
+        return game
+    }
+
+    private fun finishRound(appViewModel: AppViewModel, context: Context) {
         if(playerRoundPlacements.values.indexOf(0) >= 0) {
             Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
             return
         }
 
-        playerRoundPlacements.forEach { (player, rank) -> updateScore(player, playerRoundPlacements.size - (rank-1)) }
+        playerRoundPlacements.forEach { (player, rank) -> updateScore(appViewModel, player, playerRoundPlacements.size - (rank-1)) }
         rounds.add(Round(playerRoundPlacements.toMutableMap()))
         playerScores.forEach {(player, _) -> playerRoundPlacements[player] = 0 }
+
+        appViewModel.setActiveGame(this)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    override fun LazyListScope.gamePageScoringLayout(nameSortingModalState: ModalBottomSheetState) {
+    override fun LazyListScope.gamePageScoringLayout(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
         item {
             Text(text = "Current Round", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(nameSortingModalState)
+        scoreCard(appViewModel, nameSortingModalState)
 
         item {
             val context = LocalContext.current
 
             Button(
-                onClick = { finishRound(context) },
+                onClick = { finishRound(appViewModel, context) },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant, contentColor = MaterialTheme.colors.onSurface),
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
@@ -61,12 +78,12 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        previousRoundDisplay()
+        previousRoundDisplay(appViewModel)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    override fun ScoreUpdateInputs(cardName: String) {
+    override fun ScoreUpdateInputs(appViewModel: AppViewModel, cardName: String) {
         val expanded = remember { mutableStateOf(false) }
         val selectedIndex = remember { mutableStateOf(0) }
         val context = LocalContext.current
@@ -106,6 +123,7 @@ class RankedRoundGame(name: String, players: List<String>) : SingleWinRoundGame(
 
                             playerRoundPlacements[cardName] = place
                             Toast.makeText(context, "Set $cardName's place to $place", Toast.LENGTH_SHORT).show()
+                            appViewModel.setActiveGame(this@RankedRoundGame)
                         }) {
                             Text(place.toString())
                         }
