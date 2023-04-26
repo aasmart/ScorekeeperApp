@@ -1,6 +1,7 @@
 package com.example.scorekeeper
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -15,15 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.node.Ref
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.ui.theme.CAHAppTheme
@@ -108,13 +107,13 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         exit = slideOutHorizontally() { maxWidth -> maxWidth / 3 } + fadeOut()
     ) {
         BackHandler(enabled = true) {
-            appViewModel.toggleGameModal();
+            appViewModel.toggleGameModal()
         }
         CreateGameForm(appViewModel).Modal()
     }
 
     AnimatedVisibility(
-        visible = appUiState.isFocusedGameVisible,
+        visible = appViewModel.hasFocusedGame(),
         enter = slideInHorizontally() {
                 maxWidth -> maxWidth / 3
         } + fadeIn(
@@ -124,9 +123,15 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         exit = slideOutHorizontally() { maxWidth -> maxWidth / 3 } + fadeOut()
     ) {
         BackHandler(enabled = true) {
-            appViewModel.setFocusedGameVisible(false)
+            //appViewModel.setActiveGame(null)
         }
-        appUiState.focusedGame?.GamePage()
+
+        val ref = remember { Ref<Game>() }
+
+        ref.value = appUiState.activeGame ?: ref.value
+        ref.value?.GamePage(appViewModel)
+
+        Log.wtf("Huh", "Rerendered")
     }
 }
 

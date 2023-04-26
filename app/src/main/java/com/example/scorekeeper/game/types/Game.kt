@@ -1,5 +1,6 @@
 package com.example.scorekeeper.game.types
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -36,17 +37,28 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.lang.Integer.min
 
-open class Game(var name: String, players: List<String>) : java.io.Serializable {
-    protected val playerScores = mutableStateMapOf<String, Int>()
-    private val playerSortOrder = mutableStateOf(SortingOrder.ALPHABETICAL)
-    private val isComplete = mutableStateOf(false)
-    private var appViewModel: AppViewModel? = null
-    private val podiumPlaces =  arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
+open class Game(var name: String, players: List<String>) {
+    internal var playerScores = mutableMapOf<String, Int>()
+    internal var playerSortOrder = SortingOrder.ALPHABETICAL
+    internal var isComplete = false
+
+    companion object {
+        val podiumPlaces = arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
+    }
 
     init {
         players.forEach { name ->
             playerScores[name] = 0
         }
+    }
+
+    open fun copy(): Game {
+        val game = Game(name, listOf())
+        game.playerScores = playerScores
+        game.playerSortOrder = playerSortOrder
+        game.isComplete = isComplete
+
+        return game;
     }
 
     enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
@@ -61,21 +73,20 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     }
 
     private fun sortPlayerNames(): Map<String, Int> {
-        return when (playerSortOrder.value) {
+        return when (playerSortOrder) {
             SortingOrder.ALPHABETICAL -> playerScores.toList().sortedBy { (name, _) -> name }.toMap()
             SortingOrder.REVERSE_ALPHABETICAL -> playerScores.toList().sortedByDescending { (name, _) -> name }.toMap()
         }
     }
 
-    protected fun updateScore(playerName: String, amount: Int = 1) {
+    protected fun updateScore(appViewModel: AppViewModel, playerName: String, amount: Int = 1) {
         playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
+        appViewModel.setActiveGame(this)
     }
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun GetAsCard(appViewModel: AppViewModel) {
-        this.appViewModel = appViewModel
-
         var expanded by remember { mutableStateOf(false) }
 
         Card(
@@ -89,13 +100,12 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 .height(IntrinsicSize.Max)
                 .combinedClickable(
                     onClick = {
-                        this.appViewModel?.setFocusedGame(this)
-                        this.appViewModel?.setFocusedGameVisible(true)
+                        appViewModel.setActiveGame(this@Game)
                     },
                     onLongClick = { expanded = true }
                 )
         ) {
-            Column() {
+            Column {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -117,9 +127,9 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 Column(
                     modifier = Modifier.padding(vertical = 6.dp, horizontal = 12.dp)
                 ) {
-                    Row() {
+                    Row {
                         Text(text = "Game Status: ", fontWeight = FontWeight.Black)
-                        Text(text = (if (isComplete.value) "Finished" else "In Progress"))
+                        Text(text = (if (isComplete) "Finished" else "In Progress"))
                     }
                 }
 
@@ -164,10 +174,10 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     }
 
     @Composable
-    private fun GameTopAppBar() {
+    private fun GameTopAppBar(appViewModel: AppViewModel) {
         Box(modifier = Modifier.fillMaxSize()) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
-                IconButton(onClick = { appViewModel?.setFocusedGameVisible(false) }, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = { appViewModel.setActiveGame(null) }, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back",
@@ -203,9 +213,12 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     }
 
     @Composable
-    private fun FinishGameButton() {
+    private fun FinishGameButton(appViewModel: AppViewModel) {
         FloatingActionButton(
-            onClick = {  isComplete.value = true },
+            onClick = {
+                isComplete = true
+                appViewModel.setActiveGame(this)
+            },
             backgroundColor = MaterialTheme.colors.primaryVariant,
         ) {
             Icon(Icons.Filled.Check, "Game", tint = MaterialTheme.colors.onSurface)
@@ -213,25 +226,26 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    protected open fun LazyListScope.gamePageScoringLayout(nameSortingModalState: ModalBottomSheetState) {
+    protected open fun LazyListScope.gamePageScoringLayout(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
         item {
             Text(text = "Scoring", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(nameSortingModalState)
+        scoreCard(appViewModel, nameSortingModalState)
     }
 
+    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    fun GamePage() {
+    fun GamePage(appViewModel: AppViewModel) {
         @Composable
         fun TopBar() {
             TopAppBar(
                 backgroundColor = Purple700,
                 elevation = 8.dp,
             ) {
-                GameTopAppBar()
+                GameTopAppBar(appViewModel)
             }
         }
 
@@ -242,8 +256,8 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
         Scaffold(
             topBar = { TopBar() },
             floatingActionButton = {
-                if(!isComplete.value)
-                    FinishGameButton()
+                if(!isComplete)
+                    FinishGameButton(appViewModel)
             },
         ) {
             LazyColumn(
@@ -253,8 +267,8 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(8.dp, 8.dp)
             ) {
-                if(!isComplete.value)
-                    gamePageScoringLayout(nameSortingModalState)
+                if(!isComplete)
+                    gamePageScoringLayout(appViewModel, nameSortingModalState)
 
                 item {
                     Text(text = "Leaderboard", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
@@ -265,11 +279,11 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
             }
         }
 
-        NameSortBottomModal(nameSortingModalState)
+        NameSortBottomModal(appViewModel, nameSortingModalState)
     }
 
     @Composable
-    private fun SortTypeForm() {
+    private fun SortTypeForm(appViewModel: AppViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -281,13 +295,19 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                     modifier = Modifier
                         .fillMaxWidth()
                         .selectable(
-                            selected = it == playerSortOrder.value,
-                            onClick = { playerSortOrder.value = it }
+                            selected = it == playerSortOrder,
+                            onClick = {
+                                playerSortOrder = it
+                                appViewModel.setActiveGame(this@Game)
+                            }
                         )
                 ) {
                     RadioButton(
-                        selected = (it == playerSortOrder.value),
-                        onClick = { playerSortOrder.value = it }
+                        selected = (it == playerSortOrder),
+                        onClick = {
+                            playerSortOrder = it
+                            appViewModel.setActiveGame(this@Game)
+                        }
                     )
                     Text(
                         text = it.readableName,
@@ -301,17 +321,17 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
 
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    private fun NameSortBottomModal(nameSortingModalState: ModalBottomSheetState) {
+    private fun NameSortBottomModal(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
         ModalBottomSheetLayout(
             sheetState = nameSortingModalState,
             sheetContent = {
-                SortTypeForm()
+                SortTypeForm(appViewModel)
             }
         ) {}
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    protected fun LazyListScope.scoreCard(nameSortingModalState: ModalBottomSheetState) {
+    protected fun LazyListScope.scoreCard(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -353,11 +373,11 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
             }
         }
 
-        items(sortPlayerNames().keys.toList()) { player -> PlayerCard(cardName = player) }
+        items(sortPlayerNames().keys.toList()) { player -> PlayerCard(appViewModel, cardName = player) }
     }
 
     @Composable
-    protected open fun ScoreUpdateInputs(cardName: String) {
+    protected open fun ScoreUpdateInputs(appViewModel: AppViewModel, cardName: String) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
@@ -367,7 +387,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                 .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
         ) {
             Button(
-                onClick = { updateScore(playerName = cardName, -1) },
+                onClick = { updateScore(appViewModel, playerName = cardName, -1) },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
                 border = BorderStroke(0.dp, MaterialTheme.colors.background),
                 shape = RectangleShape,
@@ -379,7 +399,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
             }
 
             Button(
-                onClick = { updateScore(playerName = cardName) },
+                onClick = { updateScore(appViewModel, playerName = cardName) },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
                 border = BorderStroke(0.dp, MaterialTheme.colors.background),
                 shape = RectangleShape,
@@ -393,7 +413,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
     }
 
     @Composable
-    fun PlayerCard(cardName: String) {
+    fun PlayerCard(appViewModel: AppViewModel, cardName: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -449,7 +469,7 @@ open class Game(var name: String, players: List<String>) : java.io.Serializable 
                     .fillMaxHeight()
                     .weight(3f, true)
             ) {
-                ScoreUpdateInputs(cardName)
+                ScoreUpdateInputs(appViewModel, cardName)
             }
         }
     }
