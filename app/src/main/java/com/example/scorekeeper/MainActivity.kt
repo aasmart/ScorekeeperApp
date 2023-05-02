@@ -28,18 +28,20 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.scorekeeper.game.GameStateManager
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.ui.theme.CAHAppTheme
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "games")
-
 class MainActivity : ComponentActivity() {
+    lateinit var gameStore: GameStateManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         window.decorView.setBackgroundResource(R.color.black)
+
+        gameStore = GameStateManager(applicationContext)
 
         setContent {
             CAHAppTheme {
@@ -136,8 +138,6 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
 
         ref.value = appUiState.activeGame ?: ref.value
         ref.value?.GamePage(appViewModel)
-
-        Log.wtf("Huh", "Rerendered")
     }
 }
 
