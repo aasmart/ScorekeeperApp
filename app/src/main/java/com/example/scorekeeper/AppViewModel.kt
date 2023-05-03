@@ -2,7 +2,7 @@ package com.example.scorekeeper
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import com.example.scorekeeper.game.GameStateManager
+import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.game.types.RankedRoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
@@ -26,7 +26,7 @@ class AppViewModel : ViewModel() {
         _uiState.value = AppUiState(games, !_uiState.value.isCreatingGame, null)
     }
 
-    fun addNewGame(name: String = "New Game", players: List<String>, type: ScoringType) {
+    suspend fun addNewGame(gameStorage: GameStorage, name: String = "New Game", players: List<String>, type: ScoringType) {
         val gameNew = when(type) {
             ScoringType.SIMPLE_SCORING -> Game(name)
             ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name)
@@ -36,11 +36,13 @@ class AppViewModel : ViewModel() {
         gameNew.setPlayers(players)
 
         games.add(gameNew)
+        gameStorage.saveGames(games)
         _uiState.value = AppUiState(games, false, null)
     }
 
-    fun removeGame(game: Game) {
+    suspend fun removeGame(gameStorage: GameStorage, game: Game) {
         games.remove(game)
+        gameStorage.saveGames(games)
         _uiState.value = AppUiState(games, false, null)
     }
 
@@ -48,7 +50,8 @@ class AppViewModel : ViewModel() {
         return games.toList()
     }
 
-    fun setActiveGame(game: Game?) {
+    suspend fun setActiveGame(gameStorage: GameStorage, game: Game?) {
+        gameStorage.saveGames(games)
         _uiState.value = AppUiState(games, false, game?.copy())
     }
 

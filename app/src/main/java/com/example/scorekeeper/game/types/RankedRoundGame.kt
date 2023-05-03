@@ -14,7 +14,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
+import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.game.Round
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -48,54 +50,90 @@ class RankedRoundGame : SingleWinRoundGame {
         return game
     }
 
-    private fun finishRound(appViewModel: AppViewModel, context: Context) {
-        if(playerRoundPlacements.values.indexOf(0) >= 0) {
+    private suspend fun finishRound(
+        appViewModel: AppViewModel,
+        gameStorage: GameStorage,
+        context: Context
+    ) {
+        if (playerRoundPlacements.values.indexOf(0) >= 0) {
             Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
             return
         }
 
-        playerRoundPlacements.forEach { (player, rank) -> updateScore(appViewModel, player, playerRoundPlacements.size - (rank-1)) }
+        playerRoundPlacements.forEach { (player, rank) ->
+            updateScore(
+                appViewModel,
+                gameStorage,
+                player,
+                playerRoundPlacements.size - (rank - 1)
+            )
+        }
         rounds.add(Round(playerRoundPlacements.toMutableMap()))
-        playerScores.forEach {(player, _) -> playerRoundPlacements[player] = 0 }
+        playerScores.forEach { (player, _) -> playerRoundPlacements[player] = 0 }
 
-        appViewModel.setActiveGame(this)
+        appViewModel.setActiveGame(gameStorage, this)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    override fun LazyListScope.gamePageScoringLayout(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
+    override fun LazyListScope.gamePageScoringLayout(
+        appViewModel: AppViewModel,
+        gameStorage: GameStorage,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
         item {
-            Text(text = "Current Round", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+            Text(
+                text = "Current Round",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(6.dp)
+            )
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, nameSortingModalState)
+        scoreCard(appViewModel, gameStorage, nameSortingModalState)
 
         item {
             val context = LocalContext.current
+            val scope = rememberCoroutineScope()
 
             Button(
-                onClick = { finishRound(appViewModel, context) },
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant, contentColor = MaterialTheme.colors.onSurface),
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+                onClick = { scope.launch { finishRound(appViewModel, gameStorage, context) } },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.colors.primaryVariant,
+                    contentColor = MaterialTheme.colors.onSurface
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
                 Text(text = "Finish Round", fontSize = MaterialTheme.typography.button.fontSize)
             }
         }
 
         item {
-            Text(text = "Previous Rounds", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+            Text(
+                text = "Previous Rounds",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(6.dp)
+            )
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        previousRoundDisplay(appViewModel)
+        previousRoundDisplay(appViewModel, gameStorage)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    override fun ScoreUpdateInputs(appViewModel: AppViewModel, cardName: String) {
+    override fun ScoreUpdateInputs(
+        appViewModel: AppViewModel,
+        gameStorage: GameStorage,
+        cardName: String
+    ) {
         val expanded = remember { mutableStateOf(false) }
         val selectedIndex = remember { mutableStateOf(0) }
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
 
         Box(modifier = Modifier.fillMaxSize()) {
             ExposedDropdownMenuBox(
@@ -127,12 +165,23 @@ class RankedRoundGame : SingleWinRoundGame {
                             // Check to see if there is already a player with the same placement.
                             // If there is, swap their places
                             val placeIndex = playerRoundPlacements.values.indexOf(place)
-                            if(placeIndex >= 0)
-                                playerRoundPlacements[playerRoundPlacements.toList()[placeIndex].first] = playerRoundPlacements[cardName]!!.toInt()
+                            if (placeIndex >= 0)
+                                playerRoundPlacements[playerRoundPlacements.toList()[placeIndex].first] =
+                                    playerRoundPlacements[cardName]!!.toInt()
 
                             playerRoundPlacements[cardName] = place
-                            Toast.makeText(context, "Set $cardName's place to $place", Toast.LENGTH_SHORT).show()
-                            appViewModel.setActiveGame(this@RankedRoundGame)
+                            Toast.makeText(
+                                context,
+                                "Set $cardName's place to $place",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            scope.launch {
+                                appViewModel.setActiveGame(
+                                    gameStorage,
+                                    this@RankedRoundGame
+                                )
+                            }
                         }) {
                             Text(place.toString())
                         }

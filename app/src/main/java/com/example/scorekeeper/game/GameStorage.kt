@@ -11,10 +11,9 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class GameStateManager(private val context: Context) {
-    private val Context.dataStore by preferencesDataStore(name = "game_saves")
-
+class GameStorage(private val context: Context) {
     companion object {
+        private val Context.dataStore by preferencesDataStore(name = "game_saves")
         val GAME_SAVES = stringPreferencesKey("game_saves")
     }
 
