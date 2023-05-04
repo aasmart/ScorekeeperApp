@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.listeners.rememberImeState
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
@@ -119,14 +121,22 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
     }
 
     @Composable
-    private fun FinishGameButton() {
+    private fun CreateGameButton() {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
+
+        val games = GameStorage.getInstance(context).getGames()
+            .collectAsState(initial = emptyList()).value
 
         FloatingActionButton(
             onClick = {
                 if (!isValidLength(gameName.value, 1, 24)) {
                     Toast.makeText(context, "Invalid game name", Toast.LENGTH_SHORT).show()
+                    return@FloatingActionButton
+                }
+
+                if (games.find { game -> game.name == gameName.value } != null) {
+                    Toast.makeText(context, "Games cannot have duplicate names", Toast.LENGTH_SHORT).show()
                     return@FloatingActionButton
                 }
 
@@ -349,16 +359,18 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
         Scaffold(
             topBar = { TopAppBar() },
             floatingActionButton = {
-                if(!imeState.value)
-                    FinishGameButton()
+                if (!imeState.value)
+                    CreateGameButton()
             },
             floatingActionButtonPosition = FabPosition.End,
             backgroundColor = MaterialTheme.colors.background
         ) { paddingValues ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colors.background)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colors.background)
+            ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
