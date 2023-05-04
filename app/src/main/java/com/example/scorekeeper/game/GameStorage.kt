@@ -61,6 +61,17 @@ class GameStorage(private val context: Context) {
         }
     }
 
+    suspend fun setGame(game: Game) {
+        context.dataStore.edit { preferences ->
+            val games = preferences[GAME_SAVES]?.let { json ->
+                Json.decodeFromString<List<Game>>(json)
+            }?.toMutableList() ?: return@edit
+
+            games.replaceAll { g -> if(g.name == game.name) game else g }
+            preferences[GAME_SAVES] = Json.encodeToString(games)
+        }
+    }
+
     suspend fun clearGame() {
         context.dataStore.edit { it.remove(GAME_SAVES) }
     }

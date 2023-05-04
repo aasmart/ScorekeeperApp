@@ -44,9 +44,8 @@ class AppViewModel : ViewModel() {
 
     suspend fun setActiveGame(context: Context, game: Game?) {
         _uiState.value = AppUiState(false, game?.copy())
-        /*if (game != null) {
-            GameStorage.getInstance(context).addGame(game)
-        }*/
+        if (game != null)
+            GameStorage.getInstance(context).setGame(game)
     }
 
     fun hasFocusedGame(): Boolean {

@@ -184,7 +184,7 @@ open class Game(var name: String) {
                 ) {
                     DropdownMenuItem(onClick = {
                         scope.launch {
-                            appViewModel.removeGame((context), this@Game)
+                            appViewModel.removeGame(context, this@Game)
                             expanded = false
                         }
                     }) {
