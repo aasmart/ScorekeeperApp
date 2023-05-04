@@ -1,5 +1,6 @@
 package com.example.scorekeeper.game.types
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,12 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
-import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.game.Round
 import com.example.scorekeeper.ui.theme.Purple200
 import com.example.scorekeeper.ui.theme.Purple500
@@ -46,17 +47,18 @@ open class SingleWinRoundGame : Game {
 
     open suspend fun scoreUpdateInteract(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
+        context: Context,
         cardName: String
     ) {
-        updateScore(appViewModel, gameStorage, playerName = cardName, 1)
+        updateScore(appViewModel, context, playerName = cardName, 1)
         rounds.add(Round(mapOf(Pair(cardName, 1))))
-        appViewModel.setActiveGame(gameStorage, this)
+        appViewModel.setActiveGame(context, this)
     }
 
-    fun LazyListScope.previousRoundDisplay(appViewModel: AppViewModel, gameStorage: GameStorage) {
+    fun LazyListScope.previousRoundDisplay(appViewModel: AppViewModel) {
         item {
             val scope = rememberCoroutineScope()
+            val context = LocalContext.current
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -70,7 +72,7 @@ open class SingleWinRoundGame : Game {
                         roundDisplayCollapsed = !roundDisplayCollapsed
                         scope.launch {
                             appViewModel.setActiveGame(
-                                gameStorage,
+                                context,
                                 this@SingleWinRoundGame
                             )
                         }
@@ -104,7 +106,6 @@ open class SingleWinRoundGame : Game {
     @OptIn(ExperimentalMaterialApi::class)
     override fun LazyListScope.gamePageScoringLayout(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         nameSortingModalState: ModalBottomSheetState
     ) {
         item {
@@ -117,7 +118,7 @@ open class SingleWinRoundGame : Game {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, gameStorage, nameSortingModalState)
+        scoreCard(appViewModel, nameSortingModalState)
 
         item {
             Text(
@@ -129,19 +130,19 @@ open class SingleWinRoundGame : Game {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        previousRoundDisplay(appViewModel, gameStorage)
+        previousRoundDisplay(appViewModel)
     }
 
     @Composable
     override fun ScoreUpdateInputs(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         cardName: String
     ) {
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         Button(
-            onClick = { scope.launch { scoreUpdateInteract(appViewModel, gameStorage, cardName) } },
+            onClick = { scope.launch { scoreUpdateInteract(appViewModel, context, cardName) } },
             colors = ButtonDefaults.buttonColors(backgroundColor = Purple200),
             border = BorderStroke(0.dp, MaterialTheme.colors.background),
             shape = RectangleShape,

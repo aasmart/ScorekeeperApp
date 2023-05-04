@@ -63,7 +63,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.listeners.rememberImeState
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
@@ -120,7 +119,7 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
     }
 
     @Composable
-    private fun FinishGameButton(gameStorage: GameStorage) {
+    private fun FinishGameButton() {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
@@ -143,7 +142,7 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
 
                 scope.launch {
                     appViewModel.addNewGame(
-                        gameStorage,
+                        context,
                         gameName.value,
                         players.toList(),
                         AppViewModel.ScoringType.values()[selectedIndex.value]
@@ -344,14 +343,14 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun Modal(gameStorage: GameStorage) {
+    fun Modal() {
         val imeState = rememberImeState()
 
         Scaffold(
             topBar = { TopAppBar() },
             floatingActionButton = {
                 if(!imeState.value)
-                    FinishGameButton(gameStorage)
+                    FinishGameButton()
             },
             floatingActionButtonPosition = FabPosition.End,
             backgroundColor = MaterialTheme.colors.background

@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
-import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.game.Round
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -52,7 +51,6 @@ class RankedRoundGame : SingleWinRoundGame {
 
     private suspend fun finishRound(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         context: Context
     ) {
         if (playerRoundPlacements.values.indexOf(0) >= 0) {
@@ -63,7 +61,7 @@ class RankedRoundGame : SingleWinRoundGame {
         playerRoundPlacements.forEach { (player, rank) ->
             updateScore(
                 appViewModel,
-                gameStorage,
+                context,
                 player,
                 playerRoundPlacements.size - (rank - 1)
             )
@@ -71,16 +69,17 @@ class RankedRoundGame : SingleWinRoundGame {
         rounds.add(Round(playerRoundPlacements.toMutableMap()))
         playerScores.forEach { (player, _) -> playerRoundPlacements[player] = 0 }
 
-        appViewModel.setActiveGame(gameStorage, this)
+        appViewModel.setActiveGame(context, this)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
     override fun LazyListScope.gamePageScoringLayout(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         nameSortingModalState: ModalBottomSheetState
     ) {
         item {
+
+
             Text(
                 text = "Current Round",
                 fontWeight = FontWeight.Bold,
@@ -90,14 +89,14 @@ class RankedRoundGame : SingleWinRoundGame {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, gameStorage, nameSortingModalState)
+        scoreCard(appViewModel, nameSortingModalState)
 
         item {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
 
             Button(
-                onClick = { scope.launch { finishRound(appViewModel, gameStorage, context) } },
+                onClick = { scope.launch { finishRound(appViewModel, context) } },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = MaterialTheme.colors.primaryVariant,
                     contentColor = MaterialTheme.colors.onSurface
@@ -120,14 +119,13 @@ class RankedRoundGame : SingleWinRoundGame {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        previousRoundDisplay(appViewModel, gameStorage)
+        previousRoundDisplay(appViewModel)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ScoreUpdateInputs(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         cardName: String
     ) {
         val expanded = remember { mutableStateOf(false) }
@@ -178,7 +176,7 @@ class RankedRoundGame : SingleWinRoundGame {
 
                             scope.launch {
                                 appViewModel.setActiveGame(
-                                    gameStorage,
+                                    context,
                                     this@RankedRoundGame
                                 )
                             }

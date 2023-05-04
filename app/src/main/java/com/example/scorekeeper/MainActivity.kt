@@ -79,7 +79,6 @@ class MainActivity : ComponentActivity() {
 fun AppMain(appViewModel: AppViewModel = viewModel()) {
     val appUiState by appViewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val gameStorage = GameStorage(context)
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -115,15 +114,15 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
             ) {
-                GameList(gameStorage, appViewModel)
+                GameList(appViewModel)
             }
         }
     }
 
     AnimatedVisibility(
         visible = appUiState.isCreatingGame,
-        enter = slideInHorizontally {
-                maxWidth -> maxWidth / 3
+        enter = slideInHorizontally { maxWidth ->
+            maxWidth / 3
         } + fadeIn(
             // Fade in with the initial alpha of 0.3f.
             initialAlpha = 0.3f
@@ -133,13 +132,13 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         BackHandler(enabled = true) {
             appViewModel.toggleGameModal()
         }
-        CreateGameForm(appViewModel).Modal(gameStorage)
+        CreateGameForm(appViewModel).Modal()
     }
 
     AnimatedVisibility(
         visible = appViewModel.hasFocusedGame(),
-        enter = slideInHorizontally {
-                maxWidth -> maxWidth / 3
+        enter = slideInHorizontally { maxWidth ->
+            maxWidth / 3
         } + fadeIn(
             // Fade in with the initial alpha of 0.3f.
             initialAlpha = 0.3f
@@ -148,14 +147,14 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
     ) {
         BackHandler(enabled = true) {
             scope.launch {
-                appViewModel.setActiveGame(gameStorage, null)
+                appViewModel.setActiveGame(context, null)
             }
         }
 
         val ref = remember { Ref<Game>() }
 
         ref.value = appUiState.activeGame ?: ref.value
-        ref.value?.GamePage(appViewModel, gameStorage)
+        ref.value?.GamePage(appViewModel)
     }
 }
 
@@ -171,8 +170,9 @@ fun TitleText(title: String) {
 }
 
 @Composable
-fun ColumnScope.GameList(gameStorage: GameStorage, appViewModel: AppViewModel) {
-    val games: List<Game> = gameStorage.loadGames().collectAsState(initial = emptyList()).value
+fun ColumnScope.GameList(appViewModel: AppViewModel) {
+    val games = GameStorage.getInstance(LocalContext.current).getGames()
+        .collectAsState(initial = emptyList()).value
 
     LazyColumn(
         modifier = Modifier
@@ -184,7 +184,7 @@ fun ColumnScope.GameList(gameStorage: GameStorage, appViewModel: AppViewModel) {
         contentPadding = PaddingValues(12.dp)
 
     ) {
-        items(games) { game -> game.GetAsCard(appViewModel, gameStorage) }
+        items(games) { game -> game.GetAsCard(appViewModel) }
     }
 }
 

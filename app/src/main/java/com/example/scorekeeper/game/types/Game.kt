@@ -1,6 +1,7 @@
 package com.example.scorekeeper.game.types
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -32,7 +33,6 @@ import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
 import com.example.scorekeeper.TitleText
-import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
@@ -88,17 +88,17 @@ open class Game(var name: String) {
 
     protected suspend fun updateScore(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
+        context: Context,
         playerName: String,
         amount: Int = 1
     ) {
         playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
-        appViewModel.setActiveGame(gameStorage, this)
+        appViewModel.setActiveGame(context, this)
     }
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun GetAsCard(appViewModel: AppViewModel, gameStorage: GameStorage) {
+    fun GetAsCard(appViewModel: AppViewModel) {
         var expanded by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
@@ -115,7 +115,7 @@ open class Game(var name: String) {
                 .combinedClickable(
                     onClick = {
                         scope.launch {
-                            appViewModel.setActiveGame(gameStorage, this@Game)
+                            appViewModel.setActiveGame(context, this@Game)
                         }
                     },
                     onLongClick = { expanded = true }
@@ -184,7 +184,7 @@ open class Game(var name: String) {
                 ) {
                     DropdownMenuItem(onClick = {
                         scope.launch {
-                            appViewModel.removeGame(GameStorage(context), this@Game)
+                            appViewModel.removeGame((context), this@Game)
                             expanded = false
                         }
                     }) {
@@ -196,14 +196,15 @@ open class Game(var name: String) {
     }
 
     @Composable
-    private fun GameTopAppBar(appViewModel: AppViewModel, gameStorage: GameStorage) {
+    private fun GameTopAppBar(appViewModel: AppViewModel) {
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         Box(modifier = Modifier.fillMaxSize()) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
                 IconButton(onClick = {
                     scope.launch {
-                        appViewModel.setActiveGame(gameStorage, null)
+                        appViewModel.setActiveGame(context, null)
                     }
                 }, modifier = Modifier.size(32.dp)) {
                     Icon(
@@ -244,14 +245,15 @@ open class Game(var name: String) {
     }
 
     @Composable
-    private fun FinishGameButton(appViewModel: AppViewModel, gameStorage: GameStorage) {
+    private fun FinishGameButton(appViewModel: AppViewModel) {
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         FloatingActionButton(
             onClick = {
                 scope.launch {
                     isComplete = true
-                    appViewModel.setActiveGame(gameStorage, this@Game)
+                    appViewModel.setActiveGame(context, this@Game)
                 }
             },
             backgroundColor = MaterialTheme.colors.primaryVariant,
@@ -263,7 +265,6 @@ open class Game(var name: String) {
     @OptIn(ExperimentalMaterialApi::class)
     protected open fun LazyListScope.gamePageScoringLayout(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         nameSortingModalState: ModalBottomSheetState
     ) {
         item {
@@ -276,20 +277,20 @@ open class Game(var name: String) {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, gameStorage, nameSortingModalState)
+        scoreCard(appViewModel, nameSortingModalState)
     }
 
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    fun GamePage(appViewModel: AppViewModel, gameStorage: GameStorage,) {
+    fun GamePage(appViewModel: AppViewModel) {
         @Composable
         fun TopBar() {
             TopAppBar(
                 backgroundColor = Purple700,
                 elevation = 8.dp,
             ) {
-                GameTopAppBar(appViewModel, gameStorage)
+                GameTopAppBar(appViewModel)
             }
         }
 
@@ -301,7 +302,7 @@ open class Game(var name: String) {
             topBar = { TopBar() },
             floatingActionButton = {
                 if (!isComplete)
-                    FinishGameButton(appViewModel, gameStorage)
+                    FinishGameButton(appViewModel)
             },
         ) {
             LazyColumn(
@@ -312,7 +313,7 @@ open class Game(var name: String) {
                 contentPadding = PaddingValues(8.dp, 8.dp)
             ) {
                 if (!isComplete)
-                    gamePageScoringLayout(appViewModel, gameStorage, nameSortingModalState)
+                    gamePageScoringLayout(appViewModel, nameSortingModalState)
 
                 item {
                     Text(
@@ -328,12 +329,13 @@ open class Game(var name: String) {
             }
         }
 
-        NameSortBottomModal(appViewModel, gameStorage, nameSortingModalState)
+        NameSortBottomModal(appViewModel, nameSortingModalState)
     }
 
     @Composable
-    private fun SortTypeForm(appViewModel: AppViewModel, gameStorage: GameStorage) {
+    private fun SortTypeForm(appViewModel: AppViewModel) {
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         Column(
             modifier = Modifier
@@ -350,7 +352,7 @@ open class Game(var name: String) {
                             onClick = {
                                 scope.launch {
                                     playerSortOrder = it
-                                    appViewModel.setActiveGame(gameStorage, this@Game)
+                                    appViewModel.setActiveGame(context, this@Game)
                                 }
                             }
                         )
@@ -360,7 +362,7 @@ open class Game(var name: String) {
                         onClick = {
                             scope.launch {
                                 playerSortOrder = it
-                                appViewModel.setActiveGame(gameStorage, this@Game)
+                                appViewModel.setActiveGame(context, this@Game)
                             }
                         }
                     )
@@ -378,13 +380,12 @@ open class Game(var name: String) {
     @Composable
     private fun NameSortBottomModal(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         nameSortingModalState: ModalBottomSheetState
     ) {
         ModalBottomSheetLayout(
             sheetState = nameSortingModalState,
             sheetContent = {
-                SortTypeForm(appViewModel, gameStorage)
+                SortTypeForm(appViewModel)
             }
         ) {}
     }
@@ -392,7 +393,6 @@ open class Game(var name: String) {
     @OptIn(ExperimentalMaterialApi::class)
     protected fun LazyListScope.scoreCard(
         appViewModel: AppViewModel,
-        gameStorage: GameStorage,
         nameSortingModalState: ModalBottomSheetState
     ) {
         item {
@@ -439,15 +439,16 @@ open class Game(var name: String) {
         items(sortPlayerNames().keys.toList()) { player ->
             PlayerCard(
                 appViewModel,
-                gameStorage,
+                
                 cardName = player
             )
         }
     }
 
     @Composable
-    protected open fun ScoreUpdateInputs(appViewModel: AppViewModel, gameStorage: GameStorage, cardName: String) {
+    protected open fun ScoreUpdateInputs(appViewModel: AppViewModel, cardName: String) {
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -458,7 +459,7 @@ open class Game(var name: String) {
                 .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
         ) {
             Button(
-                onClick = { scope.launch { updateScore(appViewModel, gameStorage, playerName = cardName, -1) } },
+                onClick = { scope.launch { updateScore(appViewModel, context, playerName = cardName, -1) } },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
                 border = BorderStroke(0.dp, MaterialTheme.colors.background),
                 shape = RectangleShape,
@@ -475,7 +476,7 @@ open class Game(var name: String) {
             }
 
             Button(
-                onClick = { scope.launch { updateScore(appViewModel, gameStorage, playerName = cardName) } },
+                onClick = { scope.launch { updateScore(appViewModel, context, playerName = cardName) } },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
                 border = BorderStroke(0.dp, MaterialTheme.colors.background),
                 shape = RectangleShape,
@@ -494,7 +495,7 @@ open class Game(var name: String) {
     }
 
     @Composable
-    fun PlayerCard(appViewModel: AppViewModel, gameStorage: GameStorage, cardName: String) {
+    fun PlayerCard(appViewModel: AppViewModel, cardName: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -550,7 +551,7 @@ open class Game(var name: String) {
                     .fillMaxHeight()
                     .weight(3f, true)
             ) {
-                ScoreUpdateInputs(appViewModel, gameStorage, cardName)
+                ScoreUpdateInputs(appViewModel, cardName)
             }
         }
     }

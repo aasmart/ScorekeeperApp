@@ -1,5 +1,6 @@
 package com.example.scorekeeper.game
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -13,22 +14,54 @@ import kotlinx.serialization.json.Json
 
 class GameStorage(private val context: Context) {
     companion object {
+        @SuppressLint("StaticFieldLeak")
+        private var Instance: GameStorage? = null
+
         private val Context.dataStore by preferencesDataStore(name = "game_saves")
         val GAME_SAVES = stringPreferencesKey("game_saves")
-    }
 
-    suspend fun saveGames(games: List<Game>) {
-        context.dataStore.edit { gameSaves ->
-            gameSaves[GAME_SAVES] = Json.encodeToString(games)
+        @Synchronized
+        fun getInstance(context: Context): GameStorage {
+            return Instance ?: run {
+                val instance = GameStorage(context.applicationContext)
+                Instance = instance
+                instance
+            }
         }
     }
 
-    fun loadGames(): Flow<List<Game>> {
+    fun getGames(): Flow<List<Game>> {
         return context.dataStore.data
             .map { preferences ->
                 preferences[GAME_SAVES]?.let {json ->
                     Json.decodeFromString(json)
                 } ?: emptyList()
             }
+    }
+
+    suspend fun addGame(game: Game) {
+        context.dataStore.edit { preferences ->
+            val games = preferences[GAME_SAVES]?.let { json ->
+                Json.decodeFromString<List<Game>>(json)
+            }?.toMutableList() ?: return@edit
+
+            games.add(game)
+            preferences[GAME_SAVES] = Json.encodeToString(games)
+        }
+    }
+
+    suspend fun removeGame(game: Game) {
+        context.dataStore.edit { preferences ->
+            val games = preferences[GAME_SAVES]?.let { json ->
+                Json.decodeFromString<List<Game>>(json)
+            }?.toMutableList() ?: return@edit
+
+            games.remove(game)
+            preferences[GAME_SAVES] = Json.encodeToString(games)
+        }
+    }
+
+    suspend fun clearGame() {
+        context.dataStore.edit { it.remove(GAME_SAVES) }
     }
 }
