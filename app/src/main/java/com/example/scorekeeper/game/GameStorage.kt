@@ -43,7 +43,7 @@ class GameStorage(private val context: Context) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
                 Json.decodeFromString<List<Game>>(json)
-            }?.toMutableList() ?: return@edit
+            }?.toMutableList() ?: mutableListOf()
 
             games.add(game)
             preferences[GAME_SAVES] = Json.encodeToString(games)
