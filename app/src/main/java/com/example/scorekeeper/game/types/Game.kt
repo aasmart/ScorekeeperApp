@@ -1,6 +1,7 @@
 package com.example.scorekeeper.game.types
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,10 +36,12 @@ import com.example.scorekeeper.TitleText
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import org.json.JSONObject
 import java.lang.Integer.min
 
-open class Game(var name: String, players: List<String>) {
+@Serializable
+open class Game(var name: String) {
     internal var playerScores = mutableMapOf<String, Int>()
     internal var playerSortOrder = SortingOrder.ALPHABETICAL
     internal var isComplete = false
@@ -46,19 +50,19 @@ open class Game(var name: String, players: List<String>) {
         val podiumPlaces = arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
     }
 
-    init {
+    open fun setPlayers(players: List<String>) {
         players.forEach { name ->
             playerScores[name] = 0
         }
     }
 
     open fun copy(): Game {
-        val game = Game(name, listOf())
+        val game = Game(name)
         game.playerScores = playerScores
         game.playerSortOrder = playerSortOrder
         game.isComplete = isComplete
 
-        return game;
+        return game
     }
 
     enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
@@ -74,20 +78,30 @@ open class Game(var name: String, players: List<String>) {
 
     private fun sortPlayerNames(): Map<String, Int> {
         return when (playerSortOrder) {
-            SortingOrder.ALPHABETICAL -> playerScores.toList().sortedBy { (name, _) -> name }.toMap()
-            SortingOrder.REVERSE_ALPHABETICAL -> playerScores.toList().sortedByDescending { (name, _) -> name }.toMap()
+            SortingOrder.ALPHABETICAL -> playerScores.toList().sortedBy { (name, _) -> name }
+                .toMap()
+
+            SortingOrder.REVERSE_ALPHABETICAL -> playerScores.toList()
+                .sortedByDescending { (name, _) -> name }.toMap()
         }
     }
 
-    protected fun updateScore(appViewModel: AppViewModel, playerName: String, amount: Int = 1) {
+    protected suspend fun updateScore(
+        appViewModel: AppViewModel,
+        context: Context,
+        playerName: String,
+        amount: Int = 1
+    ) {
         playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
-        appViewModel.setActiveGame(this)
+        appViewModel.setActiveGame(context, this)
     }
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun GetAsCard(appViewModel: AppViewModel) {
         var expanded by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         Card(
             shape = RoundedCornerShape(10),
@@ -100,7 +114,9 @@ open class Game(var name: String, players: List<String>) {
                 .height(IntrinsicSize.Max)
                 .combinedClickable(
                     onClick = {
-                        appViewModel.setActiveGame(this@Game)
+                        scope.launch {
+                            appViewModel.setActiveGame(context, this@Game)
+                        }
                     },
                     onLongClick = { expanded = true }
                 )
@@ -133,11 +149,14 @@ open class Game(var name: String, players: List<String>) {
                     }
                 }
 
-                val sortedPlayers = playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
-                Column(modifier = Modifier
-                    .padding(start = 0.dp, end = 0.dp, bottom = 0.dp, top = 0.dp)
-                    .fillMaxSize()
-                    .clipToBounds()
+                val sortedPlayers =
+                    playerScores.toList().sortedByDescending { (_, value) -> value }.toMap()
+                        .toMutableMap()
+                Column(
+                    modifier = Modifier
+                        .padding(start = 0.dp, end = 0.dp, bottom = 0.dp, top = 0.dp)
+                        .fillMaxSize()
+                        .clipToBounds()
                 ) {
                     Row(
                         modifier = Modifier
@@ -148,13 +167,14 @@ open class Game(var name: String, players: List<String>) {
                     ) {
                         Podium(sortedPlayers, podiumPlaces)
                     }
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(4f)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(MaterialTheme.colors.primaryVariant)
-                        .zIndex(10f)
-                        .shadow(6.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(4f)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(MaterialTheme.colors.primaryVariant)
+                            .zIndex(10f)
+                            .shadow(6.dp)
                     )
                 }
 
@@ -163,8 +183,10 @@ open class Game(var name: String, players: List<String>) {
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(onClick = {
-                        appViewModel.removeGame(this@Game)
-                        expanded = false
+                        scope.launch {
+                            appViewModel.removeGame(context, this@Game)
+                            expanded = false
+                        }
                     }) {
                         Text("Delete")
                     }
@@ -175,9 +197,16 @@ open class Game(var name: String, players: List<String>) {
 
     @Composable
     private fun GameTopAppBar(appViewModel: AppViewModel) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
         Box(modifier = Modifier.fillMaxSize()) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
-                IconButton(onClick = { appViewModel.setActiveGame(null) }, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = {
+                    scope.launch {
+                        appViewModel.setActiveGame(context, null)
+                    }
+                }, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back",
@@ -200,7 +229,10 @@ open class Game(var name: String, players: List<String>) {
                 horizontalArrangement = Arrangement.End,
                 modifier = Modifier.fillMaxSize()
             ) {
-                IconButton(onClick = { /* TODO: implement hamburger menu */ }, modifier = Modifier.size(32.dp)) {
+                IconButton(
+                    onClick = { /* TODO: implement hamburger menu */ },
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = "Menu",
@@ -214,10 +246,15 @@ open class Game(var name: String, players: List<String>) {
 
     @Composable
     private fun FinishGameButton(appViewModel: AppViewModel) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
         FloatingActionButton(
             onClick = {
-                isComplete = true
-                appViewModel.setActiveGame(this)
+                scope.launch {
+                    isComplete = true
+                    appViewModel.setActiveGame(context, this@Game)
+                }
             },
             backgroundColor = MaterialTheme.colors.primaryVariant,
         ) {
@@ -226,9 +263,17 @@ open class Game(var name: String, players: List<String>) {
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    protected open fun LazyListScope.gamePageScoringLayout(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
+    protected open fun LazyListScope.gamePageScoringLayout(
+        appViewModel: AppViewModel,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
         item {
-            Text(text = "Scoring", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+            Text(
+                text = "Scoring",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(6.dp)
+            )
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
@@ -256,7 +301,7 @@ open class Game(var name: String, players: List<String>) {
         Scaffold(
             topBar = { TopBar() },
             floatingActionButton = {
-                if(!isComplete)
+                if (!isComplete)
                     FinishGameButton(appViewModel)
             },
         ) {
@@ -267,11 +312,16 @@ open class Game(var name: String, players: List<String>) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(8.dp, 8.dp)
             ) {
-                if(!isComplete)
+                if (!isComplete)
                     gamePageScoringLayout(appViewModel, nameSortingModalState)
 
                 item {
-                    Text(text = "Leaderboard", fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(6.dp))
+                    Text(
+                        text = "Leaderboard",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        modifier = Modifier.padding(6.dp)
+                    )
                     Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
                 }
 
@@ -284,6 +334,9 @@ open class Game(var name: String, players: List<String>) {
 
     @Composable
     private fun SortTypeForm(appViewModel: AppViewModel) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -297,16 +350,20 @@ open class Game(var name: String, players: List<String>) {
                         .selectable(
                             selected = it == playerSortOrder,
                             onClick = {
-                                playerSortOrder = it
-                                appViewModel.setActiveGame(this@Game)
+                                scope.launch {
+                                    playerSortOrder = it
+                                    appViewModel.setActiveGame(context, this@Game)
+                                }
                             }
                         )
                 ) {
                     RadioButton(
                         selected = (it == playerSortOrder),
                         onClick = {
-                            playerSortOrder = it
-                            appViewModel.setActiveGame(this@Game)
+                            scope.launch {
+                                playerSortOrder = it
+                                appViewModel.setActiveGame(context, this@Game)
+                            }
                         }
                     )
                     Text(
@@ -321,7 +378,10 @@ open class Game(var name: String, players: List<String>) {
 
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    private fun NameSortBottomModal(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
+    private fun NameSortBottomModal(
+        appViewModel: AppViewModel,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
         ModalBottomSheetLayout(
             sheetState = nameSortingModalState,
             sheetContent = {
@@ -331,7 +391,10 @@ open class Game(var name: String, players: List<String>) {
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    protected fun LazyListScope.scoreCard(appViewModel: AppViewModel, nameSortingModalState: ModalBottomSheetState) {
+    protected fun LazyListScope.scoreCard(
+        appViewModel: AppViewModel,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -373,11 +436,20 @@ open class Game(var name: String, players: List<String>) {
             }
         }
 
-        items(sortPlayerNames().keys.toList()) { player -> PlayerCard(appViewModel, cardName = player) }
+        items(sortPlayerNames().keys.toList()) { player ->
+            PlayerCard(
+                appViewModel,
+                
+                cardName = player
+            )
+        }
     }
 
     @Composable
     protected open fun ScoreUpdateInputs(appViewModel: AppViewModel, cardName: String) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
@@ -387,7 +459,7 @@ open class Game(var name: String, players: List<String>) {
                 .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
         ) {
             Button(
-                onClick = { updateScore(appViewModel, playerName = cardName, -1) },
+                onClick = { scope.launch { updateScore(appViewModel, context, playerName = cardName, -1) } },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
                 border = BorderStroke(0.dp, MaterialTheme.colors.background),
                 shape = RectangleShape,
@@ -395,11 +467,16 @@ open class Game(var name: String, players: List<String>) {
                     .fillMaxHeight()
                     .weight(1f, true)
             ) {
-                Text(text = "-", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colors.onSurface)
+                Text(
+                    text = "-",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colors.onSurface
+                )
             }
 
             Button(
-                onClick = { updateScore(appViewModel, playerName = cardName) },
+                onClick = { scope.launch { updateScore(appViewModel, context, playerName = cardName) } },
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
                 border = BorderStroke(0.dp, MaterialTheme.colors.background),
                 shape = RectangleShape,
@@ -407,7 +484,12 @@ open class Game(var name: String, players: List<String>) {
                     .fillMaxHeight()
                     .weight(1f, true)
             ) {
-                Text(text = "+", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colors.onSurface)
+                Text(
+                    text = "+",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colors.onSurface
+                )
             }
         }
     }
@@ -527,12 +609,13 @@ open class Game(var name: String, players: List<String>) {
     }
 
     @Composable
-    private fun RowScope.Podium(players: MutableMap<String, Int>,
-                                placeOrder: Array<PodiumPlace>,
-                                podiumMaxHeight: Float = 0.85f,
-                                podiumMinHeight: Float = 0.5f,
-                                podiumShadowMax: Float = 8.0f,
-                                podiumShadowMin: Float = 2.0f
+    private fun RowScope.Podium(
+        players: MutableMap<String, Int>,
+        placeOrder: Array<PodiumPlace>,
+        podiumMaxHeight: Float = 0.85f,
+        podiumMinHeight: Float = 0.5f,
+        podiumShadowMax: Float = 8.0f,
+        podiumShadowMin: Float = 2.0f
     ) {
         val localDensity = LocalDensity.current
 
@@ -545,7 +628,7 @@ open class Game(var name: String, players: List<String>) {
         for (place in placeOrder) {
             val rankIndex = place.rankingInt
 
-            if(playerNames.size <= rankIndex - 1)
+            if (playerNames.size <= rankIndex - 1)
                 continue
 
             val playerName = playerNames[rankIndex - 1]
@@ -590,7 +673,8 @@ open class Game(var name: String, players: List<String>) {
                             fontWeight = FontWeight.Black,
                             color = Purple500,
                             fontSize = 16.sp,
-                            modifier = Modifier.padding(16.dp))
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
                 }
             }
@@ -598,17 +682,22 @@ open class Game(var name: String, players: List<String>) {
     }
 
     private fun LazyListScope.leaderboard() {
-        val sortedPlayers = playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
+        val sortedPlayers =
+            playerScores.toList().sortedByDescending { (_, value) -> value }.toMap().toMutableMap()
 
         item {
-            Box(modifier = Modifier
-                .offset(0.dp, 3.dp)
-                .fillMaxWidth()
-                .height(120.dp), contentAlignment = Alignment.BottomCenter
+            Box(
+                modifier = Modifier
+                    .offset(0.dp, 3.dp)
+                    .fillMaxWidth()
+                    .height(120.dp), contentAlignment = Alignment.BottomCenter
             ) {
-                Row(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 0.dp), verticalAlignment = Alignment.Bottom) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 0.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
                     Podium(sortedPlayers, podiumPlaces)
                 }
             }
@@ -646,7 +735,8 @@ open class Game(var name: String, players: List<String>) {
             }
         }
 
-        val nonPodiumPlayers = sortedPlayers.keys.toList().subList(min(podiumPlaces.size, sortedPlayers.size), sortedPlayers.size)
+        val nonPodiumPlayers = sortedPlayers.keys.toList()
+            .subList(min(podiumPlaces.size, sortedPlayers.size), sortedPlayers.size)
         itemsIndexed(nonPodiumPlayers) { index, player ->
             run {
                 PlayerLeaderboardCard(cardName = player, rank = podiumPlaces.size + index + 1)

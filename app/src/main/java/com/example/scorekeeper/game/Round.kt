@@ -15,7 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.ui.theme.Purple500
+import kotlinx.serialization.Serializable
 
+@Serializable
 class Round(private val placements: Map<String, Int>) {
     @Composable
     fun GetRoundCard(roundIndex: Int) {

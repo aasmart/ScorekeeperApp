@@ -1,7 +1,8 @@
 package com.example.scorekeeper
 
-import androidx.compose.runtime.mutableStateListOf
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.game.types.RankedRoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
@@ -10,10 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class AppViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(AppUiState(listOf(), false, null))
+    private val _uiState = MutableStateFlow(AppUiState(false, null))
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
-
-    private val games = mutableStateListOf<Game>()
 
     enum class ScoringType(val readableName: String, val minPlayers: Int = 1) {
         SIMPLE_SCORING("Simple Scoring"),
@@ -22,31 +21,31 @@ class AppViewModel : ViewModel() {
     }
 
     fun toggleGameModal() {
-        _uiState.value = AppUiState(games, !_uiState.value.isCreatingGame, null)
+        _uiState.value = AppUiState(!_uiState.value.isCreatingGame, null)
     }
 
-    fun addNewGame(name: String = "New Game", players: List<String>, type: ScoringType) {
+    suspend fun addNewGame(context: Context, name: String = "New Game", players: List<String>, type: ScoringType) {
         val gameNew = when(type) {
-            ScoringType.SIMPLE_SCORING -> Game(name, players)
-            ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name, players)
-            ScoringType.RANKED_SCORING -> RankedRoundGame(name, players)
+            ScoringType.SIMPLE_SCORING -> Game(name)
+            ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name)
+            ScoringType.RANKED_SCORING -> RankedRoundGame(name)
         }
 
-        games.add(gameNew)
-        _uiState.value = AppUiState(games, false, null)
+        gameNew.setPlayers(players)
+
+        _uiState.value = AppUiState(false, null)
+        GameStorage.getInstance(context).addGame(gameNew)
     }
 
-    fun removeGame(game: Game) {
-        games.remove(game)
-        _uiState.value = AppUiState(games, false, null)
+    suspend fun removeGame(context: Context, game: Game) {
+        _uiState.value = AppUiState(false, null)
+        GameStorage.getInstance(context).removeGame(game)
     }
 
-    fun getGames(): List<Game> {
-        return games.toList()
-    }
-
-    fun setActiveGame(game: Game?) {
-        _uiState.value = AppUiState(games, false, game?.copy())
+    suspend fun setActiveGame(context: Context, game: Game?) {
+        _uiState.value = AppUiState(false, game?.copy())
+        if (game != null)
+            GameStorage.getInstance(context).setGame(game)
     }
 
     fun hasFocusedGame(): Boolean {

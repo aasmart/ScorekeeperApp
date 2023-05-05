@@ -2,12 +2,6 @@ package com.example.scorekeeper
 
 import android.content.Context
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -32,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -56,6 +49,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,10 +64,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.listeners.rememberImeState
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class CreateGameForm(private val appViewModel: AppViewModel) {
@@ -82,11 +76,13 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
     private val players = mutableStateListOf<String>()
     private val selectedIndex = mutableStateOf(0)
 
-    private val INPUT_FIELD_HEIGHT = 56.dp
-    private val PLAYER_LIST_HEIGHT = 300.dp
+    companion object {
+        private val INPUT_FIELD_HEIGHT = 56.dp
+        private val PLAYER_LIST_HEIGHT = 300.dp
 
-    fun isValidLength(str: String, min: Int, max: Int = Int.MAX_VALUE): Boolean {
-        return str.length in min..max
+        fun isValidLength(str: String, min: Int, max: Int = Int.MAX_VALUE): Boolean {
+            return str.length in min..max
+        }
     }
 
     @Composable
@@ -125,12 +121,22 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
     }
 
     @Composable
-    private fun FinishGameButton() {
+    private fun CreateGameButton() {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+
+        val games = GameStorage.getInstance(context).getGames()
+            .collectAsState(initial = emptyList()).value
+
         FloatingActionButton(
             onClick = {
                 if (!isValidLength(gameName.value, 1, 24)) {
                     Toast.makeText(context, "Invalid game name", Toast.LENGTH_SHORT).show()
+                    return@FloatingActionButton
+                }
+
+                if (games.find { game -> game.name == gameName.value } != null) {
+                    Toast.makeText(context, "Games cannot have duplicate names", Toast.LENGTH_SHORT).show()
                     return@FloatingActionButton
                 }
 
@@ -144,11 +150,14 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
                     return@FloatingActionButton
                 }
 
-                appViewModel.addNewGame(
-                    gameName.value,
-                    players.toList(),
-                    AppViewModel.ScoringType.values()[selectedIndex.value]
-                )
+                scope.launch {
+                    appViewModel.addNewGame(
+                        context,
+                        gameName.value,
+                        players.toList(),
+                        AppViewModel.ScoringType.values()[selectedIndex.value]
+                    )
+                }
             },
             backgroundColor = Purple500,
         ) {
@@ -350,13 +359,18 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
         Scaffold(
             topBar = { TopAppBar() },
             floatingActionButton = {
-                if(!imeState.value)
-                    FinishGameButton()
+                if (!imeState.value)
+                    CreateGameButton()
             },
             floatingActionButtonPosition = FabPosition.End,
             backgroundColor = MaterialTheme.colors.background
-        ) {
-            Box(modifier = Modifier.fillMaxSize().padding(it).background(MaterialTheme.colors.background)) {
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colors.background)
+            ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
