@@ -56,7 +56,7 @@ class GameStorage(private val context: Context) {
                 Json.decodeFromString<List<Game>>(json)
             }?.toMutableList() ?: return@edit
 
-            games.remove(game)
+            games.removeAll { g -> g.name == game.name }
             preferences[GAME_SAVES] = Json.encodeToString(games)
         }
     }
