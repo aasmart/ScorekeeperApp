@@ -33,6 +33,7 @@ import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
 import com.example.scorekeeper.TitleText
+import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
@@ -41,60 +42,49 @@ import org.json.JSONObject
 import java.lang.Integer.min
 
 @Serializable
-open class Game(var name: String) {
-    internal var playerScores = mutableMapOf<String, Int>()
-    internal var playerSortOrder = SortingOrder.ALPHABETICAL
-    internal var isComplete = false
+sealed class Game {
+    abstract var name: String
+    abstract val players: List<Player>
+    abstract var playerSortOrder: SortingOrder
+    abstract var isComplete: Boolean
+}
 
-    companion object {
-        val podiumPlaces = arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
+enum class SortingOrder(val readableName: String) {
+    ALPHABETICAL(readableName = "Alphabetical Order"),
+    REVERSE_ALPHABETICAL(readableName = "Reverse Alphabetical Order")
+}
+/*protected suspend fun updateScore(
+    appViewModel: AppViewModel,
+    context: Context,
+    playerName: String,
+    amount: Int = 1
+) {
+    playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
+    appViewModel.setActiveGame(context, this)
+}*/
+
+/*
+fun setPlayers(players: List<String>) {
+    players.forEach { name ->
+        playerScores[name] = 0
     }
+}
 
-    open fun setPlayers(players: List<String>) {
-        players.forEach { name ->
-            playerScores[name] = 0
-        }
+enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
+    FIRST(1, R.color.gold),
+    SECOND(2, R.color.silver),
+    THIRD(3, R.color.bronze)
+}
+
+private fun sortPlayerNames(): Map<String, Int> {
+    return when (playerSortOrder) {
+        SortingOrder.ALPHABETICAL -> playerScores.toList().sortedBy { (name, _) -> name }
+            .toMap()
+
+        SortingOrder.REVERSE_ALPHABETICAL -> playerScores.toList()
+            .sortedByDescending { (name, _) -> name }.toMap()
     }
-
-    open fun copy(): Game {
-        val game = Game(name)
-        game.playerScores = playerScores
-        game.playerSortOrder = playerSortOrder
-        game.isComplete = isComplete
-
-        return game
-    }
-
-    enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
-        FIRST(1, R.color.gold),
-        SECOND(2, R.color.silver),
-        THIRD(3, R.color.bronze)
-    }
-
-    enum class SortingOrder(val readableName: String) {
-        ALPHABETICAL(readableName = "Alphabetical Order"),
-        REVERSE_ALPHABETICAL(readableName = "Reverse Alphabetical Order")
-    }
-
-    private fun sortPlayerNames(): Map<String, Int> {
-        return when (playerSortOrder) {
-            SortingOrder.ALPHABETICAL -> playerScores.toList().sortedBy { (name, _) -> name }
-                .toMap()
-
-            SortingOrder.REVERSE_ALPHABETICAL -> playerScores.toList()
-                .sortedByDescending { (name, _) -> name }.toMap()
-        }
-    }
-
-    protected suspend fun updateScore(
-        appViewModel: AppViewModel,
-        context: Context,
-        playerName: String,
-        amount: Int = 1
-    ) {
-        playerScores.replace(playerName, playerScores.getValue(playerName) + amount)
-        appViewModel.setActiveGame(context, this)
-    }
+}
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
@@ -230,7 +220,9 @@ open class Game(var name: String) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 IconButton(
-                    onClick = { /* TODO: implement hamburger menu */ },
+                    onClick = { */
+/* TODO: implement hamburger menu *//*
+ },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -743,11 +735,5 @@ open class Game(var name: String) {
             }
         }
     }
-
-    fun toJson(): JSONObject {
-        val json = JSONObject()
-        json.put("name", name)
-
-        return json
-    }
 }
+*/

@@ -1,3 +1,4 @@
+/*
 package com.example.scorekeeper.game.types
 
 import android.content.Context
@@ -28,11 +29,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
-open class SingleWinRoundGame : Game {
-    constructor(name: String) : super(name)
-
-    var rounds = mutableListOf<Round>()
-    internal var roundDisplayCollapsed = false
+open class SingleWinRoundGame(override var name: String) : Game() {
+    private var rounds = mutableListOf<Round>()
+    private var roundDisplayCollapsed = false
 
     override fun copy(): SingleWinRoundGame {
         val game = SingleWinRoundGame(name)
@@ -55,7 +54,7 @@ open class SingleWinRoundGame : Game {
         appViewModel.setActiveGame(context, this)
     }
 
-    fun LazyListScope.previousRoundDisplay(appViewModel: AppViewModel) {
+    private fun LazyListScope.previousRoundDisplay(appViewModel: AppViewModel) {
         item {
             val scope = rememberCoroutineScope()
             val context = LocalContext.current
@@ -157,4 +156,4 @@ open class SingleWinRoundGame : Game {
             )
         }
     }
-}
+}*/

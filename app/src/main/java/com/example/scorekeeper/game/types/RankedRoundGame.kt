@@ -1,3 +1,4 @@
+/*
 package com.example.scorekeeper.game.types
 
 import android.content.Context
@@ -19,9 +20,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
-class RankedRoundGame : SingleWinRoundGame {
-    constructor(name: String) : super(name)
-
+class RankedRoundGame(override var name: String) : Game() {
+    private var rounds = mutableListOf<Round>()
+    private var roundDisplayCollapsed = false
     private var playerRoundPlacements = mutableMapOf<String, Int>()
     private var placementNumbers: List<Int>
 
@@ -188,4 +189,4 @@ class RankedRoundGame : SingleWinRoundGame {
             }
         }
     }
-}
+}*/
