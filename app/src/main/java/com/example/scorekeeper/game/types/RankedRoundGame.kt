@@ -26,7 +26,21 @@ data class RankedRoundGame(
     override var isComplete: Boolean,
     var rounds: MutableList<Round>,
     var playerRoundPlacements: MutableMap<Player, Int>
-) : Game()
+) : Game() {
+    companion object Factory {
+        fun new(name: String, playerNames: List<String>): RankedRoundGame {
+            val players = Player.toPlayerList(playerNames)
+            return RankedRoundGame(
+                name,
+                players,
+                SortingOrder.ALPHABETICAL,
+                false,
+                mutableListOf(),
+                players.associateWith { 0 }.toMutableMap()
+            )
+        }
+    }
+}
 
 /*@Serializable
 class RankedRoundGame(override var name: String) : Game() {

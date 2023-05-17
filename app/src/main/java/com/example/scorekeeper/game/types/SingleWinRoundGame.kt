@@ -34,7 +34,19 @@ data class SingleWinRoundGame(
     override var playerSortOrder: SortingOrder,
     override var isComplete: Boolean,
     var rounds: MutableList<Round>
-) : Game()
+) : Game() {
+    companion object Factory {
+        fun new(name: String, playerNames: List<String>): SingleWinRoundGame {
+            return SingleWinRoundGame(
+                name,
+                Player.toPlayerList(playerNames),
+                SortingOrder.ALPHABETICAL,
+                false,
+                mutableListOf()
+            )
+        }
+    }
+}
 
 /*
 @Serializable

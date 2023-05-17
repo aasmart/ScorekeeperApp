@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.PointGame
 import com.example.scorekeeper.game.types.RankedRoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,12 +27,10 @@ class AppViewModel : ViewModel() {
 
     suspend fun addNewGame(context: Context, name: String = "New Game", players: List<String>, type: ScoringType) {
         val gameNew = when(type) {
-            ScoringType.SIMPLE_SCORING -> Game(name)
-            ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame(name)
-            ScoringType.RANKED_SCORING -> RankedRoundGame(name)
+            ScoringType.SIMPLE_SCORING -> PointGame.new(name, players)
+            ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame.new(name, players)
+            ScoringType.RANKED_SCORING -> PointGame.new(name, players)
         }
-
-        gameNew.setPlayers(players)
 
         _uiState.value = AppUiState(false, null)
         GameStorage.getInstance(context).addGame(gameNew)
@@ -43,7 +42,7 @@ class AppViewModel : ViewModel() {
     }
 
     suspend fun setActiveGame(context: Context, game: Game?) {
-        _uiState.value = AppUiState(false, game?.copy())
+        _uiState.value = AppUiState(false, game)
         if (game != null)
             GameStorage.getInstance(context).setGame(game)
     }
