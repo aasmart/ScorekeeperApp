@@ -53,6 +53,7 @@ enum class SortingOrder(val readableName: String) {
     ALPHABETICAL(readableName = "Alphabetical Order"),
     REVERSE_ALPHABETICAL(readableName = "Reverse Alphabetical Order")
 }
+
 /*protected suspend fun updateScore(
     appViewModel: AppViewModel,
     context: Context,

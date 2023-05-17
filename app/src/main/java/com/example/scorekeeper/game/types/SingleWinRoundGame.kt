@@ -1,4 +1,3 @@
-/*
 package com.example.scorekeeper.game.types
 
 import android.content.Context
@@ -22,12 +21,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
+import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.Round
 import com.example.scorekeeper.ui.theme.Purple200
 import com.example.scorekeeper.ui.theme.Purple500
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+data class SingleWinRoundGame(
+    override var name: String,
+    override val players: List<Player>,
+    override var playerSortOrder: SortingOrder,
+    override var isComplete: Boolean,
+    var rounds: MutableList<Round>
+) : Game()
+
+/*
 @Serializable
 open class SingleWinRoundGame(override var name: String) : Game() {
     private var rounds = mutableListOf<Round>()
@@ -156,4 +165,5 @@ open class SingleWinRoundGame(override var name: String) : Game() {
             )
         }
     }
-}*/
+}
+*/

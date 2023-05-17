@@ -1,4 +1,3 @@
-/*
 package com.example.scorekeeper.game.types
 
 import android.content.Context
@@ -15,11 +14,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
+import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.Round
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-@Serializable
+data class RankedRoundGame(
+    override var name: String,
+    override val players: List<Player>,
+    override var playerSortOrder: SortingOrder,
+    override var isComplete: Boolean,
+    var rounds: MutableList<Round>,
+    var playerRoundPlacements: MutableMap<Player, Int>
+) : Game()
+
+/*@Serializable
 class RankedRoundGame(override var name: String) : Game() {
     private var rounds = mutableListOf<Round>()
     private var roundDisplayCollapsed = false

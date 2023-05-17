@@ -4,7 +4,7 @@ import com.example.scorekeeper.game.Player
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SimpleGame(
+data class PointGame(
     override var name: String,
     override val players: List<Player>,
     override var playerSortOrder: SortingOrder,

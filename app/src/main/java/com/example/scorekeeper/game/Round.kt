@@ -18,52 +18,55 @@ import com.example.scorekeeper.ui.theme.Purple500
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Round(private val placements: Map<String, Int>) {
-    @Composable
-    fun GetRoundCard(roundIndex: Int) {
-        Card(
-            shape = RoundedCornerShape(10),
-            elevation = 4.dp,
+data class Round(private val placements: Map<Player, Int>) {
+
+}
+
+/*
+@Composable
+fun GetRoundCard(roundIndex: Int) {
+    Card(
+        shape = RoundedCornerShape(10),
+        elevation = 4.dp,
+        modifier = Modifier
+            .height(IntrinsicSize.Min)
+            .fillMaxWidth()
+            .padding(0.dp, 0.dp, 0.dp, 0.dp)
+            .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .height(IntrinsicSize.Min)
-                .fillMaxWidth()
-                .padding(0.dp, 0.dp, 0.dp, 0.dp)
-                .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+                .fillMaxSize()
         ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(2f, true)
+                    .background(Purple500)
+                    .fillMaxHeight()
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(2f, true)
-                        .background(Purple500)
-                        .fillMaxHeight()
-                ) {
+                Text(
+                    text = roundIndex.toString(),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 24.sp,
+                )
+            }
+            Column(
+                modifier = Modifier.weight(10f, true)
+                    .fillMaxWidth()
+                    .padding(10.dp, 0.dp),
+            ) {
+                placements.toList().sortedBy { (_, value) -> value }.map { (key, _) -> key }.forEach {
                     Text(
-                        text = roundIndex.toString(),
-                        fontWeight = FontWeight.Black,
+                        text = "${placements[it]}. $it",
                         fontSize = 24.sp,
+                        textAlign = TextAlign.Start
                     )
                 }
-                Column(
-                    modifier = Modifier.weight(10f, true)
-                        .fillMaxWidth()
-                        .padding(10.dp, 0.dp),
-                ) {
-                    placements.toList().sortedBy { (_, value) -> value }.map { (key, _) -> key }.forEach {
-                        Text(
-                            text = "${placements[it]}. $it",
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Start
-                        )
-                    }
-                }
-
             }
+
         }
     }
-}
+}*/
