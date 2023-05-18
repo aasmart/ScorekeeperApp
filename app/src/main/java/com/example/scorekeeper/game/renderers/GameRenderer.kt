@@ -1,16 +1,26 @@
 package com.example.scorekeeper.game.renderers
 
+import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -22,24 +32,121 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
+import com.example.scorekeeper.TitleText
 import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.SortingOrder
 import com.example.scorekeeper.ui.theme.Purple500
+import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
+import java.lang.Integer.min
 
-object GameRenderer {
-    enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
-        FIRST(1, R.color.gold),
-        SECOND(2, R.color.silver),
-        THIRD(3, R.color.bronze)
+enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
+    FIRST(1, R.color.gold),
+    SECOND(2, R.color.silver),
+    THIRD(3, R.color.bronze)
+}
+
+abstract class GameRenderer {
+    abstract val game: Game
+
+    companion object {
+        private val podiumPlaces: Array<PodiumPlace> =
+            arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
     }
 
-    private val podiumPlaces: Array<PodiumPlace> =
-        arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
+    protected suspend fun updateScore(
+        appViewModel: AppViewModel,
+        context: Context,
+        player: Player,
+        amount: Int = 1
+    ) {
+        player.score += amount
+        appViewModel.setActiveGame(context, game)
+    }
+
+    private fun sortPlayerNames(): List<Player> {
+        return when (game.playerSortOrder) {
+            SortingOrder.ALPHABETICAL -> game.players.sortedBy { p -> p.name }
+            SortingOrder.REVERSE_ALPHABETICAL -> game.players.sortedByDescending { p -> p.name }
+        }
+    }
+
+    @Composable
+    private fun RowScope.Podium(
+        players: List<Player>,
+        placeOrder: Array<PodiumPlace>,
+        podiumMaxHeight: Float = 0.85f,
+        podiumMinHeight: Float = 0.5f,
+        podiumShadowMax: Float = 8.0f,
+        podiumShadowMin: Float = 2.0f
+    ) {
+        val localDensity = LocalDensity.current
+
+        val weight = 1.0f / placeOrder.size
+        val heightDecrease = (podiumMaxHeight - podiumMinHeight) / (placeOrder.size - 1)
+        val shadowDecrease = (podiumShadowMax - podiumShadowMin) / (placeOrder.size - 1)
+
+        // Print out the places
+        for (place in placeOrder) {
+            val rankIndex = place.rankingInt
+
+            if (players.size <= rankIndex - 1)
+                continue
+
+            val player = players[rankIndex - 1]
+            Box(
+                contentAlignment = Alignment.BottomCenter,
+                modifier = Modifier
+                    .weight(weight)
+                    .fillMaxHeight()
+                    .zIndex(-rankIndex.toFloat())
+            ) {
+                var podiumHeight by remember { mutableStateOf(0.dp) }
+
+                Text(
+                    text = player.name,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .offset(y = -podiumHeight)
+                )
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Box(
+                        contentAlignment = Alignment.BottomCenter,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(podiumMaxHeight - (rankIndex - 1) * heightDecrease)
+                            .shadow((podiumShadowMax - shadowDecrease * (rankIndex - 1)).dp)
+                            .background(
+                                color = colorResource(PodiumPlace.values()[rankIndex - 1].colorId),
+                                RoundedCornerShape(4)
+                            )
+                            .onGloballyPositioned { pos ->
+                                podiumHeight = with(localDensity) { pos.size.height.toDp() }
+                            }
+                    ) {
+                        Text(
+                            text = player.score.toString(),
+                            fontWeight = FontWeight.Black,
+                            color = Purple500,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun Card(game: Game, appViewModel: AppViewModel) {
+    fun Card(appViewModel: AppViewModel) {
         var expanded by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
@@ -131,7 +238,371 @@ object GameRenderer {
     }
 
     @Composable
-    private fun PlayerLeaderboardCard(game: Game, cardName: String, rank: Int) {
+    private fun GameTopAppBar(appViewModel: AppViewModel) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                IconButton(onClick = {
+                    scope.launch {
+                        appViewModel.setActiveGame(context, null)
+                    }
+                }, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                TitleText(game.name)
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                IconButton(
+                    onClick = {},
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = "Menu",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun FinishGameButton(appViewModel: AppViewModel) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
+        FloatingActionButton(
+            onClick = {
+                scope.launch {
+                    game.isComplete = true
+                    appViewModel.setActiveGame(context, game)
+                }
+            },
+            backgroundColor = MaterialTheme.colors.primaryVariant,
+        ) {
+            Icon(Icons.Filled.Check, "Game", tint = MaterialTheme.colors.onSurface)
+        }
+    }
+
+    @Composable
+    protected open fun ScoreUpdateInputs(appViewModel: AppViewModel, player: Player) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background)
+                .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+        ) {
+            Button(
+                onClick = { scope.launch { updateScore(appViewModel, context, player, -1) } },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
+                border = BorderStroke(0.dp, MaterialTheme.colors.background),
+                shape = RectangleShape,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f, true)
+            ) {
+                Text(
+                    text = "-",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colors.onSurface
+                )
+            }
+
+            Button(
+                onClick = { scope.launch { updateScore(appViewModel, context, player) } },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
+                border = BorderStroke(0.dp, MaterialTheme.colors.background),
+                shape = RectangleShape,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f, true)
+            ) {
+                Text(
+                    text = "+",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colors.onSurface
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun PlayerCard(appViewModel: AppViewModel, player: Player) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+        ) {
+            Card(
+                shape = RoundedCornerShape(10),
+                elevation = 4.dp,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(8f, true)
+                    .padding(0.dp, 0.dp, 8.dp, 0.dp)
+                    .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(3f, true)
+                            .background(Purple500)
+                            .fillMaxHeight()
+                    )
+                    Text(
+                        text = player.name,
+                        modifier = Modifier
+                            .weight(14f, true)
+                            .fillMaxWidth()
+                            .padding(12.dp, 0.dp),
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Start
+                    )
+                    Text(
+                        text = player.score.toString(),
+                        modifier = Modifier
+                            .weight(8f, true)
+                            .padding(12.dp, 0.dp),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.End
+                    )
+                }
+            }
+
+            // Scoring buttons
+            Card(
+                shape = RoundedCornerShape(10),
+                elevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(3f, true)
+            ) {
+                ScoreUpdateInputs(appViewModel, player)
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    internal fun LazyListScope.scoreCard(
+        appViewModel: AppViewModel,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .background(Purple500, RoundedCornerShape(8))
+                    .fillMaxWidth()
+                    .height(45.dp)
+                    .shadow(1.dp)
+            ) {
+                val coroutineScope = rememberCoroutineScope()
+
+                Icon(Icons.Filled.Sort, "Sort Players", modifier = Modifier
+                    .weight(10f)
+                    .clickable {
+                        coroutineScope.launch {
+                            if (nameSortingModalState.isVisible)
+                                nameSortingModalState.hide()
+                            else
+                                nameSortingModalState.show()
+                        }
+                    })
+                Text(
+                    text = "Player",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .weight(55f)
+                )
+                Text(
+                    text = "Score",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .weight(35f)
+                )
+            }
+        }
+
+        items(sortPlayerNames()) { player ->
+            PlayerCard(
+                appViewModel,
+
+                player = player
+            )
+        }
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    internal open fun LazyListScope.gamePageScoringLayout(
+        appViewModel: AppViewModel,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
+        item {
+            Text(
+                text = "Scoring",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(6.dp)
+            )
+            Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
+        }
+
+        scoreCard(appViewModel, nameSortingModalState)
+    }
+
+    @Composable
+    private fun SortTypeForm(appViewModel: AppViewModel) {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            SortingOrder.values().forEach {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = it == game.playerSortOrder,
+                            onClick = {
+                                scope.launch {
+                                    game.playerSortOrder = it
+                                    appViewModel.setActiveGame(context, game)
+                                }
+                            }
+                        )
+                ) {
+                    RadioButton(
+                        selected = (it == game.playerSortOrder),
+                        onClick = {
+                            scope.launch {
+                                game.playerSortOrder = it
+                                appViewModel.setActiveGame(context, game)
+                            }
+                        }
+                    )
+                    Text(
+                        text = it.readableName,
+                        style = MaterialTheme.typography.body1.merge(),
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    @Composable
+    private fun NameSortBottomModal(
+        appViewModel: AppViewModel,
+        nameSortingModalState: ModalBottomSheetState
+    ) {
+        ModalBottomSheetLayout(
+            sheetState = nameSortingModalState,
+            sheetContent = {
+                SortTypeForm(appViewModel)
+            }
+        ) {}
+    }
+
+    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+    @OptIn(ExperimentalMaterialApi::class)
+    @Composable
+    fun GamePage(appViewModel: AppViewModel) {
+        @Composable
+        fun TopBar() {
+            TopAppBar(
+                backgroundColor = Purple700,
+                elevation = 8.dp,
+            ) {
+                GameTopAppBar(appViewModel)
+            }
+        }
+
+        val nameSortingModalState = rememberModalBottomSheetState(
+            ModalBottomSheetValue.Hidden
+        )
+
+        Scaffold(
+            topBar = { TopBar() },
+            floatingActionButton = {
+                if (!game.isComplete)
+                    FinishGameButton(appViewModel)
+            },
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(8.dp, 8.dp)
+            ) {
+                if (!game.isComplete)
+                    gamePageScoringLayout(appViewModel, nameSortingModalState)
+
+                item {
+                    Text(
+                        text = "Leaderboard",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        modifier = Modifier.padding(6.dp)
+                    )
+                    Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
+                }
+
+                leaderboard()
+            }
+        }
+
+        NameSortBottomModal(appViewModel, nameSortingModalState)
+    }
+
+    @Composable
+    private fun PlayerLeaderboardCard(player: Player, rank: Int) {
         Card(
             shape = RoundedCornerShape(10),
             elevation = 4.dp,
@@ -161,7 +632,7 @@ object GameRenderer {
                     )
                 }
                 Text(
-                    text = cardName,
+                    text = player.name,
                     modifier = Modifier
                         .weight(10f, true)
                         .fillMaxWidth()
@@ -170,7 +641,7 @@ object GameRenderer {
                     textAlign = TextAlign.Start
                 )
                 Text(
-                    text = (game.players.find { p -> p.name == cardName }?.score ?: 0).toString(),
+                    text = player.score.toString(),
                     modifier = Modifier
                         .weight(6f, true)
                         .padding(12.dp, 0.dp),
@@ -182,74 +653,65 @@ object GameRenderer {
         }
     }
 
-    @Composable
-    private fun RowScope.Podium(
-        players: List<Player>,
-        placeOrder: Array<PodiumPlace>,
-        podiumMaxHeight: Float = 0.85f,
-        podiumMinHeight: Float = 0.5f,
-        podiumShadowMax: Float = 8.0f,
-        podiumShadowMin: Float = 2.0f
-    ) {
-        val localDensity = LocalDensity.current
+    private fun LazyListScope.leaderboard() {
+        val sortedPlayers =
+            game.players.toList().sortedByDescending { (_, value) -> value }
 
-        val weight = 1.0f / placeOrder.size
-        val heightDecrease = (podiumMaxHeight - podiumMinHeight) / (placeOrder.size - 1)
-        val shadowDecrease = (podiumShadowMax - podiumShadowMin) / (placeOrder.size - 1)
-
-        // Print out the places
-        for (place in placeOrder) {
-            val rankIndex = place.rankingInt
-
-            if (players.size <= rankIndex - 1)
-                continue
-
-            val player = players[rankIndex - 1]
+        item {
             Box(
-                contentAlignment = Alignment.BottomCenter,
                 modifier = Modifier
-                    .weight(weight)
-                    .fillMaxHeight()
-                    .zIndex(-rankIndex.toFloat())
+                    .offset(0.dp, 3.dp)
+                    .fillMaxWidth()
+                    .height(120.dp), contentAlignment = Alignment.BottomCenter
             ) {
-                var podiumHeight by remember { mutableStateOf(0.dp) }
-
-                Text(
-                    text = player.name,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Black,
+                Row(
                     modifier = Modifier
-                        .padding(4.dp)
-                        .offset(y = -podiumHeight)
-                )
-
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.BottomCenter
+                        .fillMaxSize()
+                        .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 0.dp),
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Box(
-                        contentAlignment = Alignment.BottomCenter,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(podiumMaxHeight - (rankIndex - 1) * heightDecrease)
-                            .shadow((podiumShadowMax - shadowDecrease * (rankIndex - 1)).dp)
-                            .background(
-                                color = colorResource(PodiumPlace.values()[rankIndex - 1].colorId),
-                                RoundedCornerShape(4)
-                            )
-                            .onGloballyPositioned { pos ->
-                                podiumHeight = with(localDensity) { pos.size.height.toDp() }
-                            }
-                    ) {
-                        Text(
-                            text = player.score.toString(),
-                            fontWeight = FontWeight.Black,
-                            color = Purple500,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                    Podium(sortedPlayers, podiumPlaces)
                 }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .background(Purple500, RoundedCornerShape(8))
+                    .fillMaxWidth()
+                    .height(45.dp)
+                    .shadow(1.dp)
+            ) {
+                Text(
+                    text = "Rank",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                )
+                Text(
+                    text = "Player",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                )
+                Text(
+                    text = "Score",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .zIndex(1f)
+                )
+            }
+        }
+
+        val nonPodiumPlayers =
+            sortedPlayers.subList(min(podiumPlaces.size, sortedPlayers.size), sortedPlayers.size)
+        itemsIndexed(nonPodiumPlayers) { index, player ->
+            run {
+                PlayerLeaderboardCard(player = player, rank = podiumPlaces.size + index + 1)
             }
         }
     }

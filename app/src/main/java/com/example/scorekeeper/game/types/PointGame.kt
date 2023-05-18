@@ -1,6 +1,9 @@
 package com.example.scorekeeper.game.types
 
 import com.example.scorekeeper.game.Player
+import com.example.scorekeeper.game.renderers.GameRenderer
+import com.example.scorekeeper.game.renderers.PointGameRenderer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,5 +22,9 @@ data class PointGame(
                 false
             )
         }
+    }
+
+    override fun getRenderer(): PointGameRenderer {
+        return PointGameRenderer(this)
     }
 }

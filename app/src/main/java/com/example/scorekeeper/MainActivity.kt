@@ -155,7 +155,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         val ref = remember { Ref<Game>() }
 
         ref.value = appUiState.activeGame ?: ref.value
-        /*ref.value?.GamePage(appViewModel)*/
+        ref.value?.getRenderer()?.GamePage(appViewModel)
     }
 }
 
@@ -186,7 +186,7 @@ fun ColumnScope.GameList(appViewModel: AppViewModel) {
         contentPadding = PaddingValues(12.dp)
 
     ) {
-        items(games) { game -> GameRenderer.Card(game = game, appViewModel) }
+        items(games) { game -> game.getRenderer().Card(appViewModel) }
     }
 }
 

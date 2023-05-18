@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.RoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -29,12 +30,6 @@ class GameStorage(private val context: Context) {
                 val instance = GameStorage(context.applicationContext)
                 Instance = instance
                 instance
-            }
-        }
-
-        val module = SerializersModule {
-            polymorphic(Game::class) {
-
             }
         }
     }
