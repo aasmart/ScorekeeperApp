@@ -42,7 +42,7 @@ class AppViewModel : ViewModel() {
     }
 
     suspend fun setActiveGame(context: Context, game: Game?) {
-        _uiState.value = AppUiState(false, game)
+        _uiState.value = AppUiState(false, game?.getCopy())
         if (game != null)
             GameStorage.getInstance(context).setGame(game)
     }

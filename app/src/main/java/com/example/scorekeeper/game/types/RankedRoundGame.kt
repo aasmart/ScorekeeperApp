@@ -2,9 +2,8 @@ package com.example.scorekeeper.game.types
 
 import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.SortingOrder
-import com.example.scorekeeper.game.round.Round
-import com.example.scorekeeper.game.renderers.GameRenderer
 import com.example.scorekeeper.game.renderers.RankedRoundGameRenderer
+import com.example.scorekeeper.game.round.Round
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -34,6 +33,18 @@ data class RankedRoundGame(
 
     override fun getRenderer(): RankedRoundGameRenderer {
         return RankedRoundGameRenderer(this)
+    }
+
+    override fun getCopy(): RankedRoundGame {
+        return copy(
+            name = name,
+            players = players,
+            playerSortOrder = playerSortOrder,
+            isComplete = isComplete,
+            rounds = rounds,
+            playerRoundPlacements = playerRoundPlacements,
+            placementNumbers = placementNumbers
+        )
     }
 }
 

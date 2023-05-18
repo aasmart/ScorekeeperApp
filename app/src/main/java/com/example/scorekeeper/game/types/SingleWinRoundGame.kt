@@ -2,9 +2,8 @@ package com.example.scorekeeper.game.types
 
 import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.SortingOrder
-import com.example.scorekeeper.game.round.Round
-import com.example.scorekeeper.game.renderers.GameRenderer
 import com.example.scorekeeper.game.renderers.SingleWinRoundGameRenderer
+import com.example.scorekeeper.game.round.Round
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -29,5 +28,15 @@ data class SingleWinRoundGame(
 
     override fun getRenderer(): SingleWinRoundGameRenderer {
         return SingleWinRoundGameRenderer(this)
+    }
+
+    override fun getCopy(): SingleWinRoundGame {
+        return copy(
+            name = name,
+            players = players,
+            playerSortOrder = playerSortOrder,
+            isComplete = isComplete,
+            rounds = rounds,
+        )
     }
 }
