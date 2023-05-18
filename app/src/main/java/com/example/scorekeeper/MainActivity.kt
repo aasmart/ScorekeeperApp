@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scorekeeper.game.GameStorage
-import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.renderers.GameRenderer
 import com.example.scorekeeper.ui.theme.CAHAppTheme
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
@@ -151,10 +151,10 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
             }
         }
 
-        val ref = remember { Ref<Game>() }
+        val gameRendererRef = remember { Ref<GameRenderer>() }
 
-        ref.value = appUiState.activeGame ?: ref.value
-        ref.value?.GamePage(appViewModel)
+        gameRendererRef.value = appUiState.activeGameRenderer ?: gameRendererRef.value
+        gameRendererRef.value?.GamePage(appViewModel)
     }
 }
 
@@ -171,7 +171,8 @@ fun TitleText(title: String) {
 
 @Composable
 fun ColumnScope.GameList(appViewModel: AppViewModel) {
-    val games = GameStorage.getInstance(LocalContext.current).getGames()
+    val context = LocalContext.current
+    val games = GameStorage.getInstance(context).getGames()
         .collectAsState(initial = emptyList()).value
 
     LazyColumn(
@@ -184,7 +185,7 @@ fun ColumnScope.GameList(appViewModel: AppViewModel) {
         contentPadding = PaddingValues(12.dp)
 
     ) {
-        items(games) { game -> game.GetAsCard(appViewModel) }
+        items(games) { game -> game.getRenderer().Card(appViewModel) }
     }
 }
 

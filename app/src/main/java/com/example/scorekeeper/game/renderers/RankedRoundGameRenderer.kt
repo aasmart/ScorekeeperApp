@@ -1,105 +1,65 @@
-package com.example.scorekeeper.game.types
+package com.example.scorekeeper.game.renderers
 
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Divider
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.scorekeeper.AppViewModel
+import com.example.scorekeeper.R
 import com.example.scorekeeper.game.Player
-import com.example.scorekeeper.game.SortingOrder
-import com.example.scorekeeper.game.renderers.RankedRoundGameRenderer
 import com.example.scorekeeper.game.round.Round
-import kotlinx.serialization.Serializable
+import com.example.scorekeeper.game.types.RankedRoundGame
+import kotlinx.coroutines.launch
 
-@Serializable
-data class RankedRoundGame(
-    override var name: String,
-    override val players: List<Player>,
-    override var playerSortOrder: SortingOrder,
-    override var isComplete: Boolean,
-    override val rounds: MutableList<Round>,
-    val playerRoundPlacements: MutableMap<Player, Int>,
-    val placementNumbers: List<Int>
-) : RoundGame() {
-    companion object Factory {
-        fun new(name: String, playerNames: List<String>): RankedRoundGame {
-            val players = Player.toPlayerList(playerNames)
-            return RankedRoundGame(
-                name,
-                players,
-                SortingOrder.ALPHABETICAL,
-                false,
-                mutableListOf(),
-                players.associateWith { 0 }.toMutableMap(),
-                (1..players.size).toList()
-            )
-        }
-    }
-
-    override fun getRenderer(): RankedRoundGameRenderer {
-        return RankedRoundGameRenderer(this)
-    }
-
-    override fun getCopy(): RankedRoundGame {
-        return copy(
-            name = name,
-            players = players,
-            playerSortOrder = playerSortOrder,
-            isComplete = isComplete,
-            rounds = rounds,
-            playerRoundPlacements = playerRoundPlacements,
-            placementNumbers = placementNumbers
-        )
-    }
-}
-
-/*@Serializable
-class RankedRoundGame(override var name: String) : Game() {
-    private var rounds = mutableListOf<Round>()
-    private var roundDisplayCollapsed = false
-    private var playerRoundPlacements = mutableMapOf<String, Int>()
-
-
-    init {
-        placementNumbers = listOf()
-    }
-
-    override fun setPlayers(players: List<String>) {
-        super.setPlayers(players)
-        players.forEach { playerRoundPlacements[it] = 0 }
-        placementNumbers = (1..playerRoundPlacements.size).toList()
-    }
-
-    override fun copy(): RankedRoundGame {
-        val game = RankedRoundGame(name)
-        game.name = name
-        game.playerScores = playerScores
-        game.playerSortOrder = playerSortOrder
-        game.isComplete = isComplete
-        game.rounds = rounds
-        game.roundDisplayCollapsed = roundDisplayCollapsed
-        game.playerRoundPlacements = playerRoundPlacements
-        game.placementNumbers = placementNumbers
-
-        return game
-    }
-
+class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRenderer(game) {
     private suspend fun finishRound(
         appViewModel: AppViewModel,
         context: Context
     ) {
-        if (playerRoundPlacements.values.indexOf(0) >= 0) {
+        if (game.playerRoundPlacements.values.indexOf(0) != -1) {
             Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
             return
         }
 
-        playerRoundPlacements.forEach { (player, rank) ->
+        game.playerRoundPlacements.forEach { (player, rank) ->
             updateScore(
                 appViewModel,
                 context,
                 player,
-                playerRoundPlacements.size - (rank - 1)
+                game.playerRoundPlacements.size - (rank - 1)
             )
         }
-        rounds.add(Round(playerRoundPlacements.toMutableMap()))
-        playerScores.forEach { (player, _) -> playerRoundPlacements[player] = 0 }
+        game.rounds.add(Round(game.playerRoundPlacements.toMutableMap()))
+        game.players.forEach { game.playerRoundPlacements[it] = 0 }
 
-        appViewModel.setActiveGame(context, this)
+        appViewModel.setActiveGame(context, game)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
@@ -108,8 +68,6 @@ class RankedRoundGame(override var name: String) : Game() {
         nameSortingModalState: ModalBottomSheetState
     ) {
         item {
-
-
             Text(
                 text = "Current Round",
                 fontWeight = FontWeight.Bold,
@@ -149,14 +107,14 @@ class RankedRoundGame(override var name: String) : Game() {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        previousRoundDisplay(appViewModel)
+        previousRoundDisplay()
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
+    @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
     @Composable
     override fun ScoreUpdateInputs(
         appViewModel: AppViewModel,
-        cardName: String
+        player: Player
     ) {
         val expanded = remember { mutableStateOf(false) }
         val selectedIndex = remember { mutableStateOf(0) }
@@ -172,7 +130,7 @@ class RankedRoundGame(override var name: String) : Game() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 TextField(
-                    value = playerRoundPlacements[cardName].toString(),
+                    value = game.playerRoundPlacements[player].toString(),
                     onValueChange = {},
                     label = { Text(text = stringResource(R.string.rank)) },
                     readOnly = true,
@@ -185,29 +143,29 @@ class RankedRoundGame(override var name: String) : Game() {
                     onDismissRequest = { expanded.value = false },
                     modifier = Modifier.width(IntrinsicSize.Max)
                 ) {
-                    placementNumbers.toList().forEachIndexed { index, place ->
+                    game.placementNumbers.toList().forEachIndexed { index, place ->
                         DropdownMenuItem(onClick = {
                             selectedIndex.value = index
                             expanded.value = !expanded.value
 
                             // Check to see if there is already a player with the same placement.
                             // If there is, swap their places
-                            val placeIndex = playerRoundPlacements.values.indexOf(place)
+                            val placeIndex = game.playerRoundPlacements.values.indexOf(place)
                             if (placeIndex >= 0)
-                                playerRoundPlacements[playerRoundPlacements.toList()[placeIndex].first] =
-                                    playerRoundPlacements[cardName]!!.toInt()
+                                game.playerRoundPlacements[game.playerRoundPlacements.toList()[placeIndex].first] =
+                                    game.playerRoundPlacements[player]!!.toInt()
 
-                            playerRoundPlacements[cardName] = place
+                            game.playerRoundPlacements[player] = place
                             Toast.makeText(
                                 context,
-                                "Set $cardName's place to $place",
+                                "Set ${player.name}'s place to $place",
                                 Toast.LENGTH_SHORT
                             ).show()
 
                             scope.launch {
                                 appViewModel.setActiveGame(
                                     context,
-                                    this@RankedRoundGame
+                                    game
                                 )
                             }
                         }) {
@@ -218,4 +176,4 @@ class RankedRoundGame(override var name: String) : Game() {
             }
         }
     }
-}*/
+}

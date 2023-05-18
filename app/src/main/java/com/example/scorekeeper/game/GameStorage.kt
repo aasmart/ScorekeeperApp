@@ -6,11 +6,15 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.RankedRoundGame
+import com.example.scorekeeper.game.types.SingleWinRoundGame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 
 class GameStorage(private val context: Context) {
     companion object {
@@ -28,13 +32,25 @@ class GameStorage(private val context: Context) {
                 instance
             }
         }
+
+        private val module = SerializersModule {
+            polymorphic(Game::class) {
+                subclass(SingleWinRoundGame::class, SingleWinRoundGame.serializer())
+                subclass(RankedRoundGame::class, RankedRoundGame.serializer())
+            }
+        }
+
+        private val gameJson = Json {
+            serializersModule = module
+            allowStructuredMapKeys = true
+        }
     }
 
     fun getGames(): Flow<List<Game>> {
         return context.dataStore.data
             .map { preferences ->
                 preferences[GAME_SAVES]?.let {json ->
-                    Json.decodeFromString(json)
+                    gameJson.decodeFromString(json)
                 } ?: emptyList()
             }
     }
@@ -42,33 +58,33 @@ class GameStorage(private val context: Context) {
     suspend fun addGame(game: Game) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
-                Json.decodeFromString<List<Game>>(json)
+                gameJson.decodeFromString<List<Game>>(json)
             }?.toMutableList() ?: mutableListOf()
 
             games.add(game)
-            preferences[GAME_SAVES] = Json.encodeToString(games)
+            preferences[GAME_SAVES] = gameJson.encodeToString(games)
         }
     }
 
     suspend fun removeGame(game: Game) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
-                Json.decodeFromString<List<Game>>(json)
+                gameJson.decodeFromString<List<Game>>(json)
             }?.toMutableList() ?: return@edit
 
             games.removeAll { g -> g.name == game.name }
-            preferences[GAME_SAVES] = Json.encodeToString(games)
+            preferences[GAME_SAVES] = gameJson.encodeToString(games)
         }
     }
 
     suspend fun setGame(game: Game) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
-                Json.decodeFromString<List<Game>>(json)
+                gameJson.decodeFromString<List<Game>>(json)
             }?.toMutableList() ?: return@edit
 
             games.replaceAll { g -> if(g.name == game.name) game else g }
-            preferences[GAME_SAVES] = Json.encodeToString(games)
+            preferences[GAME_SAVES] = gameJson.encodeToString(games)
         }
     }
 

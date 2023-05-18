@@ -1,8 +1,8 @@
 package com.example.scorekeeper
 
-import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.renderers.GameRenderer
 
 data class AppUiState(
     val isCreatingGame: Boolean,
-    val activeGame: Game?,
+    val activeGameRenderer: GameRenderer?
 )
