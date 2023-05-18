@@ -107,7 +107,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        previousRoundDisplay(appViewModel)
+        previousRoundDisplay()
     }
 
     @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
