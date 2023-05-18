@@ -31,21 +31,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
-import com.example.scorekeeper.R
 import com.example.scorekeeper.TitleText
 import com.example.scorekeeper.game.Player
+import com.example.scorekeeper.game.PodiumPlace
+import com.example.scorekeeper.game.SortingOrder
 import com.example.scorekeeper.game.types.Game
-import com.example.scorekeeper.game.types.SortingOrder
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
 import java.lang.Integer.min
-
-enum class PodiumPlace(val rankingInt: Int, val colorId: Int) {
-    FIRST(1, R.color.gold),
-    SECOND(2, R.color.silver),
-    THIRD(3, R.color.bronze)
-}
 
 abstract class GameRenderer {
     abstract val game: Game
