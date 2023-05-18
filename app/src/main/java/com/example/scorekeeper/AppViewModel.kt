@@ -29,7 +29,7 @@ class AppViewModel : ViewModel() {
         val gameNew = when(type) {
             ScoringType.SIMPLE_SCORING -> PointGame.new(name, players)
             ScoringType.ROUNDS_SINGLE -> SingleWinRoundGame.new(name, players)
-            ScoringType.RANKED_SCORING -> PointGame.new(name, players)
+            ScoringType.RANKED_SCORING -> RankedRoundGame.new(name, players)
         }
 
         _uiState.value = AppUiState(false, null)
