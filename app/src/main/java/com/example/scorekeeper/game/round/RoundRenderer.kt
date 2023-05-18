@@ -67,7 +67,7 @@ abstract class RoundRenderer {
                     round.placements.toList().sortedBy { (_, value) -> value }
                         .map { (key, _) -> key }.forEach {
                             Text(
-                                text = "${round.placements[it]}. $it",
+                                text = "${round.placements[it]}. ${it.name}",
                                 fontSize = 24.sp,
                                 textAlign = TextAlign.Start
                             )
