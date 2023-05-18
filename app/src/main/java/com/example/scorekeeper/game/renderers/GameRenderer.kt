@@ -49,10 +49,6 @@ abstract class GameRenderer {
             arrayOf(PodiumPlace.SECOND, PodiumPlace.FIRST, PodiumPlace.THIRD)
     }
 
-    init {
-        println("test")
-    }
-
     protected suspend fun updateScore(
         appViewModel: AppViewModel,
         context: Context,
