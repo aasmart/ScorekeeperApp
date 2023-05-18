@@ -56,6 +56,7 @@ abstract class RoundRenderer {
                         text = roundIndex.toString(),
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
+                        color = MaterialTheme.colors.onPrimary
                     )
                 }
                 Column(

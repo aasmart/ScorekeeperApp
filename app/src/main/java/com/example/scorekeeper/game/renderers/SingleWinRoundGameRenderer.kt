@@ -46,7 +46,7 @@ class SingleWinRoundGameRenderer(override val game: SingleWinRoundGame) : RoundG
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, nameSortingModalState)
+        scoringList(appViewModel, nameSortingModalState)
 
         item {
             Text(
@@ -62,7 +62,7 @@ class SingleWinRoundGameRenderer(override val game: SingleWinRoundGame) : RoundG
     }
 
     @Composable
-    override fun ScoreUpdateInputs(appViewModel: AppViewModel, player: Player) {
+    override fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player) {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
 

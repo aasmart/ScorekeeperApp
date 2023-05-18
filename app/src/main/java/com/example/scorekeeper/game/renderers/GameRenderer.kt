@@ -172,6 +172,7 @@ abstract class GameRenderer {
                         text = game.name,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier
                             .zIndex(1f)
                             .padding(6.dp, 0.dp, 6.dp, 0.dp)
@@ -297,12 +298,12 @@ abstract class GameRenderer {
             },
             backgroundColor = MaterialTheme.colors.primaryVariant,
         ) {
-            Icon(Icons.Filled.Check, "Game", tint = MaterialTheme.colors.onSurface)
+            Icon(Icons.Filled.Check, "Game", tint = MaterialTheme.colors.onPrimary)
         }
     }
 
     @Composable
-    protected open fun ScoreUpdateInputs(appViewModel: AppViewModel, player: Player) {
+    protected open fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player) {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
 
@@ -407,13 +408,38 @@ abstract class GameRenderer {
                     .fillMaxHeight()
                     .weight(3f, true)
             ) {
-                ScoreUpdateInputs(appViewModel, player)
+                UpdateScoreInputs(appViewModel, player)
             }
         }
     }
 
+    @Composable
+    internal fun HeaderText(name: String) {
+        Text(
+            text = name,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onPrimary,
+            modifier = Modifier
+                .zIndex(1f)
+        )
+    }
+
+    @Composable
+    internal fun RowScope.HeaderText(name: String, weight: Float) {
+        Text(
+            text = name,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onPrimary,
+            modifier = Modifier
+                .zIndex(1f)
+                .weight(weight)
+        )
+    }
+
     @OptIn(ExperimentalMaterialApi::class)
-    internal fun LazyListScope.scoreCard(
+    internal fun LazyListScope.scoringList(
         appViewModel: AppViewModel,
         nameSortingModalState: ModalBottomSheetState
     ) {
@@ -429,32 +455,22 @@ abstract class GameRenderer {
             ) {
                 val coroutineScope = rememberCoroutineScope()
 
-                Icon(Icons.Filled.Sort, "Sort Players", modifier = Modifier
-                    .weight(10f)
-                    .clickable {
-                        coroutineScope.launch {
-                            if (nameSortingModalState.isVisible)
-                                nameSortingModalState.hide()
-                            else
-                                nameSortingModalState.show()
-                        }
-                    })
-                Text(
-                    text = "Player",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                Icon(
+                    Icons.Filled.Sort,
+                    "Sort Players",
+                    tint = MaterialTheme.colors.onPrimary,
                     modifier = Modifier
-                        .zIndex(1f)
-                        .weight(55f)
-                )
-                Text(
-                    text = "Score",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .zIndex(1f)
-                        .weight(35f)
-                )
+                        .weight(10f)
+                        .clickable {
+                            coroutineScope.launch {
+                                if (nameSortingModalState.isVisible)
+                                    nameSortingModalState.hide()
+                                else
+                                    nameSortingModalState.show()
+                            }
+                        })
+                HeaderText(name = "Player", 55f)
+                HeaderText(name = "Score", 55f)
             }
         }
 
@@ -482,7 +498,7 @@ abstract class GameRenderer {
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, nameSortingModalState)
+        scoringList(appViewModel, nameSortingModalState)
     }
 
     @Composable
@@ -623,6 +639,7 @@ abstract class GameRenderer {
                         text = rank.toString(),
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
+                        color = MaterialTheme.colors.onPrimary
                     )
                 }
                 Text(
@@ -677,27 +694,9 @@ abstract class GameRenderer {
                     .height(45.dp)
                     .shadow(1.dp)
             ) {
-                Text(
-                    text = "Rank",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .zIndex(1f)
-                )
-                Text(
-                    text = "Player",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .zIndex(1f)
-                )
-                Text(
-                    text = "Score",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .zIndex(1f)
-                )
+                HeaderText(name = "Rank")
+                HeaderText(name = "Player")
+                HeaderText(name = "Score")
             }
         }
 

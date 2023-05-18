@@ -77,7 +77,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
             Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
         }
 
-        scoreCard(appViewModel, nameSortingModalState)
+        scoringList(appViewModel, nameSortingModalState)
 
         item {
             val context = LocalContext.current
@@ -112,7 +112,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
 
     @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
     @Composable
-    override fun ScoreUpdateInputs(
+    override fun UpdateScoreInputs(
         appViewModel: AppViewModel,
         player: Player
     ) {
