@@ -172,7 +172,7 @@ abstract class GameRenderer {
                         text = game.name,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.onPrimary,
+                        color = Color.White,
                         modifier = Modifier
                             .zIndex(1f)
                             .padding(6.dp, 0.dp, 6.dp, 0.dp)
@@ -298,7 +298,7 @@ abstract class GameRenderer {
             },
             backgroundColor = MaterialTheme.colors.primaryVariant,
         ) {
-            Icon(Icons.Filled.Check, "Game", tint = MaterialTheme.colors.onPrimary)
+            Icon(Icons.Filled.Check, "Game", tint = Color.White)
         }
     }
 
@@ -419,7 +419,7 @@ abstract class GameRenderer {
             text = name,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colors.onPrimary,
+            color = Color.White,
             modifier = Modifier
                 .zIndex(1f)
         )
@@ -431,7 +431,7 @@ abstract class GameRenderer {
             text = name,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colors.onPrimary,
+            color = Color.White,
             modifier = Modifier
                 .zIndex(1f)
                 .weight(weight)
@@ -458,7 +458,7 @@ abstract class GameRenderer {
                 Icon(
                     Icons.Filled.Sort,
                     "Sort Players",
-                    tint = MaterialTheme.colors.onPrimary,
+                    tint = Color.White,
                     modifier = Modifier
                         .weight(10f)
                         .clickable {
@@ -639,7 +639,7 @@ abstract class GameRenderer {
                         text = rank.toString(),
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
-                        color = MaterialTheme.colors.onPrimary
+                        color = Color.White
                     )
                 }
                 Text(
