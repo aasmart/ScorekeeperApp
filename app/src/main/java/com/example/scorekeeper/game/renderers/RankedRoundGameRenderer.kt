@@ -43,7 +43,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
         appViewModel: AppViewModel,
         context: Context
     ) {
-        if (game.playerRoundPlacements.values.indexOf(0) != -1) {
+        if (game.playerRoundPlacements.values.indexOf(-1) != -1) {
             Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
             return
         }
@@ -57,7 +57,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
             )
         }
         game.rounds.add(Round(game.playerRoundPlacements.toMutableMap()))
-        game.players.forEach { game.playerRoundPlacements[it] = 0 }
+        game.players.forEach { game.playerRoundPlacements[it] = -1 }
 
         appViewModel.setActiveGame(context, game)
     }
@@ -129,8 +129,12 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
+                var itemDisplayValue = game.playerRoundPlacements[player].toString()
+                if(itemDisplayValue == "-1")
+                    itemDisplayValue = "Unranked"
+
                 TextField(
-                    value = game.playerRoundPlacements[player].toString(),
+                    value = itemDisplayValue,
                     onValueChange = {},
                     label = { Text(text = stringResource(R.string.rank)) },
                     readOnly = true,

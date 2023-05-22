@@ -25,7 +25,7 @@ data class RankedRoundGame(
                 SortingOrder.ALPHABETICAL,
                 false,
                 mutableListOf(),
-                players.associateWith { 0 }.toMutableMap(),
+                players.associateWith { -1 }.toMutableMap(),
                 (1..players.size).toList()
             )
         }
