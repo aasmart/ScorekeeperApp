@@ -143,6 +143,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
                     onValueChange = {},
                     label = { Text(text = stringResource(R.string.rank)) },
                     readOnly = true,
+                    singleLine = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value) },
                     modifier = Modifier.fillMaxWidth()
                 )
