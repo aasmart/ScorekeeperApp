@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -93,7 +94,11 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text(text = "Finish Round", fontSize = MaterialTheme.typography.button.fontSize)
+                Text(
+                    text = "Finish Round",
+                    fontSize = MaterialTheme.typography.button.fontSize,
+                    color = Color.White
+                )
             }
         }
 
@@ -130,7 +135,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
                 modifier = Modifier.fillMaxSize()
             ) {
                 var itemDisplayValue = game.playerRoundPlacements[player].toString()
-                if(itemDisplayValue == "-1")
+                if (itemDisplayValue == "-1")
                     itemDisplayValue = "Unranked"
 
                 TextField(
