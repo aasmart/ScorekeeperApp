@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -32,9 +31,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.TitleText
-import com.example.scorekeeper.game.players.Player
 import com.example.scorekeeper.game.PodiumPlace
 import com.example.scorekeeper.game.SortingOrder
+import com.example.scorekeeper.game.players.Player
 import com.example.scorekeeper.game.types.Game
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
@@ -57,7 +56,7 @@ abstract class GameRenderer {
         recompose: Boolean = true
     ) {
         player.score += amount
-        if(recompose)
+        if (recompose)
             appViewModel.setActiveGame(context, game)
     }
 
@@ -305,53 +304,7 @@ abstract class GameRenderer {
     }
 
     @Composable
-    protected open fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player) {
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background)
-                .border(0.75.dp, MaterialTheme.colors.background, RoundedCornerShape(10))
-        ) {
-            Button(
-                onClick = { scope.launch { updateScore(appViewModel, context, player, -1) } },
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
-                border = BorderStroke(0.dp, MaterialTheme.colors.background),
-                shape = RectangleShape,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f, true)
-            ) {
-                Text(
-                    text = "-",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 24.sp,
-                    color = MaterialTheme.colors.onSurface
-                )
-            }
-
-            Button(
-                onClick = { scope.launch { updateScore(appViewModel, context, player) } },
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface),
-                border = BorderStroke(0.dp, MaterialTheme.colors.background),
-                shape = RectangleShape,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f, true)
-            ) {
-                Text(
-                    text = "+",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 24.sp,
-                    color = MaterialTheme.colors.onSurface
-                )
-            }
-        }
-    }
+    abstract fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player)
 
     @Composable
     private fun PlayerCard(appViewModel: AppViewModel, player: Player) {
@@ -486,22 +439,10 @@ abstract class GameRenderer {
     }
 
     @OptIn(ExperimentalMaterialApi::class)
-    internal open fun LazyListScope.gamePageScoringLayout(
+    abstract fun LazyListScope.gamePageScoringLayout(
         appViewModel: AppViewModel,
         nameSortingModalState: ModalBottomSheetState
-    ) {
-        item {
-            Text(
-                text = "Scoring",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(6.dp)
-            )
-            Divider(modifier = Modifier.padding(12.dp, 0.dp, 12.dp, 16.dp))
-        }
-
-        scoringList(appViewModel, nameSortingModalState)
-    }
+    )
 
     @Composable
     private fun SortTypeForm(appViewModel: AppViewModel) {
