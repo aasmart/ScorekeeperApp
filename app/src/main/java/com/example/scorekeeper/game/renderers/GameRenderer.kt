@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.TitleText
-import com.example.scorekeeper.game.Player
+import com.example.scorekeeper.game.players.Player
 import com.example.scorekeeper.game.PodiumPlace
 import com.example.scorekeeper.game.SortingOrder
 import com.example.scorekeeper.game.types.Game
@@ -53,10 +53,12 @@ abstract class GameRenderer {
         appViewModel: AppViewModel,
         context: Context,
         player: Player,
-        amount: Int = 1
+        amount: Int = 1,
+        recompose: Boolean = true
     ) {
         player.score += amount
-        appViewModel.setActiveGame(context, game)
+        if(recompose)
+            appViewModel.setActiveGame(context, game)
     }
 
     private fun sortPlayerNames(): List<Player> {
@@ -666,7 +668,7 @@ abstract class GameRenderer {
 
     private fun LazyListScope.leaderboard() {
         val sortedPlayers =
-            game.players.toList().sortedByDescending { (_, value) -> value }
+            game.players.toList().sortedByDescending { it.score }
 
         item {
             Box(

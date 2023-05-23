@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
-import com.example.scorekeeper.game.Player
+import com.example.scorekeeper.game.players.Player
 import com.example.scorekeeper.game.round.Round
 import com.example.scorekeeper.game.types.RankedRoundGame
 import kotlinx.coroutines.launch
@@ -44,21 +44,22 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
         appViewModel: AppViewModel,
         context: Context
     ) {
-        if (game.playerRoundPlacements.values.indexOf(-1) != -1) {
-            Toast.makeText(context, "All players must have a place", Toast.LENGTH_SHORT).show()
+        if (game.players.any { it.rank == -1 }) {
+            Toast.makeText(context, "All players must be ranked", Toast.LENGTH_SHORT).show()
             return
         }
 
-        game.playerRoundPlacements.forEach { (player, rank) ->
+        game.players.forEach { player ->
             updateScore(
                 appViewModel,
                 context,
                 player,
-                game.playerRoundPlacements.size - (rank - 1)
+                game.players.size - (player.rank - 1),
+                false
             )
         }
-        game.rounds.add(Round(game.playerRoundPlacements.toMutableMap()))
-        game.players.forEach { game.playerRoundPlacements[it] = -1 }
+        game.rounds.add(Round(game.players.map { it.copy() }))
+        game.players.forEach { it.rank = -1}
 
         appViewModel.setActiveGame(context, game)
     }
@@ -134,7 +135,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
-                var itemDisplayValue = game.playerRoundPlacements[player].toString()
+                var itemDisplayValue = game.players.find { it == player }?.rank.toString()
                 if (itemDisplayValue == "-1")
                     itemDisplayValue = "Unranked"
 
@@ -160,12 +161,11 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
 
                             // Check to see if there is already a player with the same placement.
                             // If there is, swap their places
-                            val placeIndex = game.playerRoundPlacements.values.indexOf(place)
-                            if (placeIndex >= 0)
-                                game.playerRoundPlacements[game.playerRoundPlacements.toList()[placeIndex].first] =
-                                    game.playerRoundPlacements[player]!!.toInt()
+                            val placePlayer = game.players.find { it.rank == place }
+                            if (placePlayer != null)
+                                placePlayer.rank = game.players.find { it == player }?.rank!!
 
-                            game.playerRoundPlacements[player] = place
+                            game.players.find { it == player }?.rank = place
                             Toast.makeText(
                                 context,
                                 "Set ${player.name}'s place to $place",

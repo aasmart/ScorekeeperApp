@@ -14,7 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
-import com.example.scorekeeper.game.Player
+import com.example.scorekeeper.game.players.Player
+import com.example.scorekeeper.game.players.RoundPlayer
 import com.example.scorekeeper.game.round.Round
 import com.example.scorekeeper.game.types.SingleWinRoundGame
 import com.example.scorekeeper.ui.theme.Purple200
@@ -27,7 +28,11 @@ class SingleWinRoundGameRenderer(override val game: SingleWinRoundGame) : RoundG
         player: Player
     ) {
         updateScore(appViewModel, context, player, 1)
-        game.rounds.add(Round(mapOf(player to 1)))
+
+        val roundPlayer = player as RoundPlayer
+        roundPlayer.rank = 1
+
+        game.rounds.add(Round(listOf(roundPlayer)))
         appViewModel.setActiveGame(context, game)
     }
 

@@ -1,7 +1,7 @@
 package com.example.scorekeeper.game.types
 
-import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.SortingOrder
+import com.example.scorekeeper.game.players.RoundPlayer
 import com.example.scorekeeper.game.renderers.SingleWinRoundGameRenderer
 import com.example.scorekeeper.game.round.Round
 import kotlinx.serialization.Serializable
@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SingleWinRoundGame(
     override var name: String,
-    override val players: List<Player>,
+    override val players: List<RoundPlayer>,
     override var playerSortOrder: SortingOrder,
     override var isComplete: Boolean,
     override val rounds: MutableList<Round>,
@@ -18,7 +18,7 @@ data class SingleWinRoundGame(
         fun new(name: String, playerNames: List<String>): SingleWinRoundGame {
             return SingleWinRoundGame(
                 name,
-                Player.toPlayerList(playerNames),
+                RoundPlayer.fromNames(playerNames),
                 SortingOrder.ALPHABETICAL,
                 false,
                 mutableListOf()

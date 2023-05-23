@@ -1,7 +1,7 @@
 package com.example.scorekeeper.game.types
 
-import com.example.scorekeeper.game.Player
 import com.example.scorekeeper.game.SortingOrder
+import com.example.scorekeeper.game.players.RoundPlayer
 import com.example.scorekeeper.game.renderers.RankedRoundGameRenderer
 import com.example.scorekeeper.game.round.Round
 import kotlinx.serialization.Serializable
@@ -9,23 +9,21 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RankedRoundGame(
     override var name: String,
-    override val players: List<Player>,
+    override val players: List<RoundPlayer>,
     override var playerSortOrder: SortingOrder,
     override var isComplete: Boolean,
     override val rounds: MutableList<Round>,
-    val playerRoundPlacements: MutableMap<Player, Int>,
     val placementNumbers: List<Int>
 ) : RoundGame() {
     companion object Factory {
         fun new(name: String, playerNames: List<String>): RankedRoundGame {
-            val players = Player.toPlayerList(playerNames)
+            val players = RoundPlayer.fromNames(playerNames)
             return RankedRoundGame(
                 name,
                 players,
                 SortingOrder.ALPHABETICAL,
                 false,
                 mutableListOf(),
-                players.associateWith { -1 }.toMutableMap(),
                 (1..players.size).toList()
             )
         }
@@ -42,7 +40,6 @@ data class RankedRoundGame(
             playerSortOrder = playerSortOrder,
             isComplete = isComplete,
             rounds = rounds,
-            playerRoundPlacements = playerRoundPlacements,
             placementNumbers = placementNumbers
         )
     }

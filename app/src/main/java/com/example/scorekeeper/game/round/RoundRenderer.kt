@@ -66,10 +66,10 @@ abstract class RoundRenderer {
                         .fillMaxWidth()
                         .padding(10.dp, 0.dp),
                 ) {
-                    round.placements.toList().sortedBy { (_, value) -> value }
-                        .map { (key, _) -> key }.forEach {
+                    round.placements.sortedBy { it.rank }
+                        .forEach {
                             Text(
-                                text = "${round.placements[it]}. ${it.name}",
+                                text = "${it.rank}. ${it.name}",
                                 fontSize = 24.sp,
                                 textAlign = TextAlign.Start
                             )
