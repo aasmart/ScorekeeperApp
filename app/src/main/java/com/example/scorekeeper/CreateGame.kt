@@ -30,10 +30,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -64,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.scorekeeper.components.Dropdown
 import com.example.scorekeeper.game.GameStorage
 import com.example.scorekeeper.listeners.rememberImeState
 import com.example.scorekeeper.ui.theme.Purple500
@@ -74,7 +71,7 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
     private val gameName = mutableStateOf("")
     private val playerName = mutableStateOf("")
     private val players = mutableStateListOf<String>()
-    private val selectedIndex = mutableStateOf(0)
+    private var selectedType = mutableStateOf(AppViewModel.ScoringType.SIMPLE_SCORING)
 
     companion object {
         private val INPUT_FIELD_HEIGHT = 56.dp
@@ -136,11 +133,12 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
                 }
 
                 if (games.find { game -> game.name == gameName.value } != null) {
-                    Toast.makeText(context, "Games cannot have duplicate names", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Games cannot have duplicate names", Toast.LENGTH_SHORT)
+                        .show()
                     return@FloatingActionButton
                 }
 
-                val minPlayers = AppViewModel.ScoringType.values()[selectedIndex.value].minPlayers
+                val minPlayers = selectedType.value.minPlayers
                 if (players.size < minPlayers) {
                     Toast.makeText(
                         context,
@@ -155,7 +153,7 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
                         context,
                         gameName.value,
                         players.toList(),
-                        AppViewModel.ScoringType.values()[selectedIndex.value]
+                        selectedType.value
                     )
                 }
             },
@@ -165,56 +163,18 @@ class CreateGameForm(private val appViewModel: AppViewModel) {
         }
     }
 
-    @OptIn(
-        ExperimentalMaterialApi::class
-    )
     @Composable
     private fun GameTypeDropdown() {
-        val context = LocalContext.current
-
-        val expanded = remember { mutableStateOf(false) }
-
-        ExposedDropdownMenuBox(
-            expanded = expanded.value,
-            onExpandedChange = {
-                expanded.value = !expanded.value
-            },
-            modifier = Modifier.height(INPUT_FIELD_HEIGHT)
-        ) {
-            TextField(
-                value = AppViewModel.ScoringType.values()[selectedIndex.value].readableName,
-                onValueChange = {},
-                label = { Text(text = stringResource(R.string.game_preset)) },
-                readOnly = true,
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = expanded.value
-                    )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Dropdown(
+                selectedType.value.readableName,
+                stringResource(R.string.game_preset),
+                AppViewModel.ScoringType.values().toList(),
+                onItemClicked = { _, item ->
+                    selectedType.value = item
                 },
-                modifier = Modifier.fillMaxSize()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded.value,
-                onDismissRequest = { expanded.value = false },
-            ) {
-                AppViewModel.ScoringType.values().forEachIndexed { index, enum ->
-                    DropdownMenuItem(
-                        onClick = {
-                            selectedIndex.value = index
-                            expanded.value = !expanded.value
-                            Toast.makeText(
-                                context,
-                                AppViewModel.ScoringType.values()[selectedIndex.value].readableName,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(enum.readableName)
-                    }
-                }
-            }
+                getItemText = { it.readableName }
+            ).Render()
         }
     }
 
