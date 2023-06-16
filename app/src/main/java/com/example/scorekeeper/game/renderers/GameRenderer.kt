@@ -290,17 +290,17 @@ abstract class GameRenderer {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
+            text = { Text("Finish game", color = Color.White) },
             onClick = {
                 scope.launch {
                     game.isComplete = true
                     appViewModel.setActiveGame(context, game)
                 }
             },
-            backgroundColor = MaterialTheme.colors.primaryVariant,
-        ) {
-            Icon(Icons.Filled.Check, "Game", tint = Color.White)
-        }
+            backgroundColor = Purple500,
+            icon = { Icon(Icons.Filled.Check, "Finish game", tint = Color.White) }
+        )
     }
 
     @Composable
@@ -522,14 +522,22 @@ abstract class GameRenderer {
 
         Scaffold(
             topBar = { TopBar() },
+            bottomBar = {
+                BottomAppBar(backgroundColor = Purple700) {
+
+                }
+            },
             floatingActionButton = {
                 if (!game.isComplete)
                     FinishGameButton(appViewModel)
             },
+            isFloatingActionButtonDocked = true,
+            floatingActionButtonPosition = FabPosition.Center
         ) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .padding(it),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(8.dp, 8.dp)
