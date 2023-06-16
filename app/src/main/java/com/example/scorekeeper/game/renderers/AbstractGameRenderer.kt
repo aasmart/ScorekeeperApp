@@ -222,7 +222,7 @@ abstract class AbstractGameRenderer {
                 ) {
                     DropdownMenuItem(onClick = {
                         scope.launch {
-                            appViewModel.removeGame(context, game)
+                            appViewModel.removeGame(context, game.gameId)
                             expanded = false
                         }
                     }) {

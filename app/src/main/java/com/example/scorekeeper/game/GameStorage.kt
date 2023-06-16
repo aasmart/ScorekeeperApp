@@ -66,13 +66,13 @@ class GameStorage(private val context: Context) {
         }
     }
 
-    suspend fun removeGame(game: AbstractGame) {
+    suspend fun removeGame(gameId: String) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
                 gameJson.decodeFromString<List<AbstractGame>>(json)
             }?.toMutableList() ?: return@edit
 
-            games.removeAll { g -> g.gameId == game.gameId }
+            games.removeAll { g -> g.gameId == gameId }
             preferences[GAME_SAVES] = gameJson.encodeToString(games)
         }
     }

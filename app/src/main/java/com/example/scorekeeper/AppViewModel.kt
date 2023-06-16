@@ -36,9 +36,9 @@ class AppViewModel : ViewModel() {
         GameStorage.getInstance(context).addGame(gameNew)
     }
 
-    suspend fun removeGame(context: Context, game: AbstractGame) {
+    suspend fun removeGame(context: Context, gameId: String) {
         _uiState.value = AppUiState(false, null, false)
-        GameStorage.getInstance(context).removeGame(game)
+        GameStorage.getInstance(context).removeGame(gameId)
     }
 
     suspend fun setActiveGame(context: Context, game: AbstractGame?) {
