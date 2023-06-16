@@ -72,7 +72,7 @@ class GameStorage(private val context: Context) {
                 gameJson.decodeFromString<List<AbstractGame>>(json)
             }?.toMutableList() ?: return@edit
 
-            games.removeAll { g -> g.name == game.name }
+            games.removeAll { g -> g.gameId == game.gameId }
             preferences[GAME_SAVES] = gameJson.encodeToString(games)
         }
     }
@@ -83,7 +83,7 @@ class GameStorage(private val context: Context) {
                 gameJson.decodeFromString<List<AbstractGame>>(json)
             }?.toMutableList() ?: return@edit
 
-            games.replaceAll { g -> if(g.name == game.name) game else g }
+            games.replaceAll { g -> if(g.gameId == game.gameId) game else g }
             preferences[GAME_SAVES] = gameJson.encodeToString(games)
         }
     }
