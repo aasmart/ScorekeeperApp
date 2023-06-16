@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.ui.theme.Purple500
 
-abstract class RoundRenderer {
+abstract class AbstractRoundRenderer {
     abstract val round: Round
 
     @Composable
