@@ -537,7 +537,6 @@ abstract class AbstractGameRenderer {
                     }
                 }
             },
-            backgroundColor = MaterialTheme.colors.primarySurface,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.shadow(24.dp)
         )
