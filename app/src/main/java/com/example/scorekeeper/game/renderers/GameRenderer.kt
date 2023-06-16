@@ -287,16 +287,10 @@ abstract class GameRenderer {
 
     @Composable
     private fun FinishGameButton(appViewModel: AppViewModel) {
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-
         ExtendedFloatingActionButton(
             text = { Text("Finish game", color = Color.White) },
             onClick = {
-                scope.launch {
-                    game.isComplete = true
-                    appViewModel.setActiveGame(context, game)
-                }
+                appViewModel.setFinishGameAlertDialogVisible(true)
             },
             backgroundColor = Purple500,
             icon = { Icon(Icons.Filled.Check, "Finish game", tint = Color.White) }
@@ -432,7 +426,6 @@ abstract class GameRenderer {
         items(sortPlayerNames()) { player ->
             PlayerCard(
                 appViewModel,
-
                 player = player
             )
         }
@@ -502,10 +495,58 @@ abstract class GameRenderer {
         ) {}
     }
 
+    @Composable
+    private fun FinishGameAlertDialog(appViewModel: AppViewModel) {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+
+        AlertDialog(
+            onDismissRequest = { appViewModel.setFinishGameAlertDialogVisible(false) },
+            title = { Text(text = "Finish Game", fontWeight = FontWeight.Bold) },
+            text = { Text(text = "Are you sure you want to finish this game?") },
+            buttons = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(
+                        12.dp,
+                        Alignment.CenterHorizontally
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp, 0.dp, 24.dp, 16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                game.isComplete = true
+                                appViewModel.setActiveGame(context, game)
+                                appViewModel.setFinishGameAlertDialogVisible(false)
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = "Finish Game")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            appViewModel.setFinishGameAlertDialogVisible(false)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                }
+            },
+            backgroundColor = MaterialTheme.colors.primarySurface,
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.shadow(24.dp)
+        )
+    }
+
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
-    fun GamePage(appViewModel: AppViewModel) {
+    fun GamePage(appViewModel: AppViewModel, isFinishGameAlertDialogOpen: Boolean) {
         @Composable
         fun TopBar() {
             TopAppBar(
@@ -523,9 +564,7 @@ abstract class GameRenderer {
         Scaffold(
             topBar = { TopBar() },
             bottomBar = {
-                BottomAppBar(backgroundColor = Purple700) {
-
-                }
+                BottomAppBar(backgroundColor = Purple700) { }
             },
             floatingActionButton = {
                 if (!game.isComplete)
@@ -534,6 +573,9 @@ abstract class GameRenderer {
             isFloatingActionButtonDocked = true,
             floatingActionButtonPosition = FabPosition.Center
         ) {
+            if (isFinishGameAlertDialogOpen)
+                FinishGameAlertDialog(appViewModel = appViewModel)
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()

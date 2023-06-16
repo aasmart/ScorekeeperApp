@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class AppViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(AppUiState(false, null))
+    private val _uiState = MutableStateFlow(AppUiState(false, null, false))
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
     enum class ScoringType(val readableName: String, val minPlayers: Int = 1) {
@@ -22,7 +22,7 @@ class AppViewModel : ViewModel() {
     }
 
     fun toggleGameModal() {
-        _uiState.value = AppUiState(!_uiState.value.isCreatingGame, null)
+        _uiState.value = AppUiState(!_uiState.value.isCreatingGame, null, false)
     }
 
     suspend fun addNewGame(context: Context, name: String = "New Game", players: List<String>, type: ScoringType) {
@@ -32,22 +32,26 @@ class AppViewModel : ViewModel() {
             ScoringType.RANKED_SCORING -> RankedRoundGame.new(name, players)
         }
 
-        _uiState.value = AppUiState(false, null)
+        _uiState.value = AppUiState(false, null, false)
         GameStorage.getInstance(context).addGame(gameNew)
     }
 
     suspend fun removeGame(context: Context, game: Game) {
-        _uiState.value = AppUiState(false, null)
+        _uiState.value = AppUiState(false, null, false)
         GameStorage.getInstance(context).removeGame(game)
     }
 
     suspend fun setActiveGame(context: Context, game: Game?) {
-        _uiState.value = AppUiState(false, game?.getRenderer())
+        _uiState.value = AppUiState(false, game?.getRenderer(), false)
         if (game != null)
             GameStorage.getInstance(context).setGame(game)
     }
 
     fun hasFocusedGame(): Boolean {
         return _uiState.value.activeGameRenderer != null
+    }
+
+    fun setFinishGameAlertDialogVisible(visible: Boolean) {
+        _uiState.value = AppUiState(false, _uiState.value.activeGameRenderer, visible)
     }
 }

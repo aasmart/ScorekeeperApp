@@ -154,7 +154,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
         val gameRendererRef = remember { Ref<GameRenderer>() }
 
         gameRendererRef.value = appUiState.activeGameRenderer ?: gameRendererRef.value
-        gameRendererRef.value?.GamePage(appViewModel)
+        gameRendererRef.value?.GamePage(appViewModel, appUiState.activeGameAlertDialogVisible)
     }
 }
 
