@@ -33,15 +33,15 @@ import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.TitleText
 import com.example.scorekeeper.game.PodiumPlace
 import com.example.scorekeeper.game.SortingOrder
-import com.example.scorekeeper.game.players.Player
-import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.players.AbstractPlayer
+import com.example.scorekeeper.game.types.AbstractGame
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
 import kotlinx.coroutines.launch
 import java.lang.Integer.min
 
-abstract class GameRenderer {
-    abstract val game: Game
+abstract class AbstractGameRenderer {
+    abstract val game: AbstractGame
 
     companion object {
         private val podiumPlaces: Array<PodiumPlace> =
@@ -51,7 +51,7 @@ abstract class GameRenderer {
     protected suspend fun updateScore(
         appViewModel: AppViewModel,
         context: Context,
-        player: Player,
+        player: AbstractPlayer,
         amount: Int = 1,
         recompose: Boolean = true
     ) {
@@ -60,7 +60,7 @@ abstract class GameRenderer {
             appViewModel.setActiveGame(context, game)
     }
 
-    private fun sortPlayerNames(): List<Player> {
+    private fun sortPlayerNames(): List<AbstractPlayer> {
         return when (game.playerSortOrder) {
             SortingOrder.ALPHABETICAL -> game.players.sortedBy { p -> p.name }
             SortingOrder.REVERSE_ALPHABETICAL -> game.players.sortedByDescending { p -> p.name }
@@ -69,7 +69,7 @@ abstract class GameRenderer {
 
     @Composable
     private fun RowScope.Podium(
-        players: List<Player>,
+        players: List<AbstractPlayer>,
         placeOrder: Array<PodiumPlace>,
         podiumMaxHeight: Float = 0.85f,
         podiumMinHeight: Float = 0.5f,
@@ -298,10 +298,10 @@ abstract class GameRenderer {
     }
 
     @Composable
-    abstract fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player)
+    abstract fun UpdateScoreInputs(appViewModel: AppViewModel, player: AbstractPlayer)
 
     @Composable
-    private fun PlayerCard(appViewModel: AppViewModel, player: Player) {
+    private fun PlayerCard(appViewModel: AppViewModel, player: AbstractPlayer) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -605,7 +605,7 @@ abstract class GameRenderer {
     }
 
     @Composable
-    private fun PlayerLeaderboardCard(player: Player, rank: Int) {
+    private fun PlayerLeaderboardCard(player: AbstractPlayer, rank: Int) {
         Card(
             shape = RoundedCornerShape(10),
             elevation = 4.dp,

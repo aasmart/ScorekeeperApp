@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.AbstractGame
 import com.example.scorekeeper.game.types.RankedRoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +34,7 @@ class GameStorage(private val context: Context) {
         }
 
         private val module = SerializersModule {
-            polymorphic(Game::class) {
+            polymorphic(AbstractGame::class) {
                 subclass(SingleWinRoundGame::class, SingleWinRoundGame.serializer())
                 subclass(RankedRoundGame::class, RankedRoundGame.serializer())
             }
@@ -46,7 +46,7 @@ class GameStorage(private val context: Context) {
         }
     }
 
-    fun getGames(): Flow<List<Game>> {
+    fun getGames(): Flow<List<AbstractGame>> {
         return context.dataStore.data
             .map { preferences ->
                 preferences[GAME_SAVES]?.let {json ->
@@ -55,10 +55,10 @@ class GameStorage(private val context: Context) {
             }
     }
 
-    suspend fun addGame(game: Game) {
+    suspend fun addGame(game: AbstractGame) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
-                gameJson.decodeFromString<List<Game>>(json)
+                gameJson.decodeFromString<List<AbstractGame>>(json)
             }?.toMutableList() ?: mutableListOf()
 
             games.add(game)
@@ -66,10 +66,10 @@ class GameStorage(private val context: Context) {
         }
     }
 
-    suspend fun removeGame(game: Game) {
+    suspend fun removeGame(game: AbstractGame) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
-                gameJson.decodeFromString<List<Game>>(json)
+                gameJson.decodeFromString<List<AbstractGame>>(json)
             }?.toMutableList() ?: return@edit
 
             games.removeAll { g -> g.name == game.name }
@@ -77,10 +77,10 @@ class GameStorage(private val context: Context) {
         }
     }
 
-    suspend fun setGame(game: Game) {
+    suspend fun setGame(game: AbstractGame) {
         context.dataStore.edit { preferences ->
             val games = preferences[GAME_SAVES]?.let { json ->
-                gameJson.decodeFromString<List<Game>>(json)
+                gameJson.decodeFromString<List<AbstractGame>>(json)
             }?.toMutableList() ?: return@edit
 
             games.replaceAll { g -> if(g.name == game.name) game else g }

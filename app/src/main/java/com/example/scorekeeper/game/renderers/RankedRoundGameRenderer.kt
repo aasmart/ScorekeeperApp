@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
 import com.example.scorekeeper.R
 import com.example.scorekeeper.components.Dropdown
-import com.example.scorekeeper.game.players.Player
+import com.example.scorekeeper.game.players.AbstractPlayer
 import com.example.scorekeeper.game.round.Round
 import com.example.scorekeeper.game.types.RankedRoundGame
 import kotlinx.coroutines.launch
@@ -112,7 +112,7 @@ class RankedRoundGameRenderer(override val game: RankedRoundGame) : RoundGameRen
     @Composable
     override fun UpdateScoreInputs(
         appViewModel: AppViewModel,
-        player: Player
+        player: AbstractPlayer
     ) {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()

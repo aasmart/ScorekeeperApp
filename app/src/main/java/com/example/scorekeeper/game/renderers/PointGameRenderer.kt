@@ -27,13 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
-import com.example.scorekeeper.game.players.Player
+import com.example.scorekeeper.game.players.AbstractPlayer
 import com.example.scorekeeper.game.types.PointGame
 import kotlinx.coroutines.launch
 
-class PointGameRenderer(override val game: PointGame) : GameRenderer() {
+class PointGameRenderer(override val game: PointGame) : AbstractGameRenderer() {
     @Composable
-    override fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player) {
+    override fun UpdateScoreInputs(appViewModel: AppViewModel, player: AbstractPlayer) {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
 

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.example.scorekeeper.game.types.RoundGame
 import com.example.scorekeeper.ui.theme.Purple500
 
-abstract class RoundGameRenderer(override val game: RoundGame) : GameRenderer() {
+abstract class RoundGameRenderer(override val game: RoundGame) : AbstractGameRenderer() {
     private var roundDisplayCollapsed = mutableStateOf(false)
 
     internal fun LazyListScope.previousRoundDisplay() {

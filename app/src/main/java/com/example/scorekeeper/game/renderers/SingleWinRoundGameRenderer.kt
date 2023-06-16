@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scorekeeper.AppViewModel
-import com.example.scorekeeper.game.players.Player
+import com.example.scorekeeper.game.players.AbstractPlayer
 import com.example.scorekeeper.game.players.RoundPlayer
 import com.example.scorekeeper.game.round.Round
 import com.example.scorekeeper.game.types.SingleWinRoundGame
@@ -25,7 +25,7 @@ class SingleWinRoundGameRenderer(override val game: SingleWinRoundGame) : RoundG
     private suspend fun scoreUpdateInteract(
         appViewModel: AppViewModel,
         context: Context,
-        player: Player
+        player: AbstractPlayer
     ) {
         updateScore(appViewModel, context, player, 1)
 
@@ -67,7 +67,7 @@ class SingleWinRoundGameRenderer(override val game: SingleWinRoundGame) : RoundG
     }
 
     @Composable
-    override fun UpdateScoreInputs(appViewModel: AppViewModel, player: Player) {
+    override fun UpdateScoreInputs(appViewModel: AppViewModel, player: AbstractPlayer) {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
 

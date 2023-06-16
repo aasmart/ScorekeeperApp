@@ -3,7 +3,7 @@ package com.example.scorekeeper
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.example.scorekeeper.game.GameStorage
-import com.example.scorekeeper.game.types.Game
+import com.example.scorekeeper.game.types.AbstractGame
 import com.example.scorekeeper.game.types.PointGame
 import com.example.scorekeeper.game.types.RankedRoundGame
 import com.example.scorekeeper.game.types.SingleWinRoundGame
@@ -36,12 +36,12 @@ class AppViewModel : ViewModel() {
         GameStorage.getInstance(context).addGame(gameNew)
     }
 
-    suspend fun removeGame(context: Context, game: Game) {
+    suspend fun removeGame(context: Context, game: AbstractGame) {
         _uiState.value = AppUiState(false, null, false)
         GameStorage.getInstance(context).removeGame(game)
     }
 
-    suspend fun setActiveGame(context: Context, game: Game?) {
+    suspend fun setActiveGame(context: Context, game: AbstractGame?) {
         _uiState.value = AppUiState(false, game?.getRenderer(), false)
         if (game != null)
             GameStorage.getInstance(context).setGame(game)

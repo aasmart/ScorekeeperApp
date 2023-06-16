@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scorekeeper.game.GameStorage
-import com.example.scorekeeper.game.renderers.GameRenderer
+import com.example.scorekeeper.game.renderers.AbstractGameRenderer
 import com.example.scorekeeper.ui.theme.CAHAppTheme
 import com.example.scorekeeper.ui.theme.Purple500
 import com.example.scorekeeper.ui.theme.Purple700
@@ -151,7 +151,7 @@ fun AppMain(appViewModel: AppViewModel = viewModel()) {
             }
         }
 
-        val gameRendererRef = remember { Ref<GameRenderer>() }
+        val gameRendererRef = remember { Ref<AbstractGameRenderer>() }
 
         gameRendererRef.value = appUiState.activeGameRenderer ?: gameRendererRef.value
         gameRendererRef.value?.GamePage(appViewModel, appUiState.activeGameAlertDialogVisible)

@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 
 @Polymorphic
 @Serializable
-sealed class RoundGame : Game() {
+sealed class RoundGame : AbstractGame() {
     abstract val rounds: MutableList<Round>
 }

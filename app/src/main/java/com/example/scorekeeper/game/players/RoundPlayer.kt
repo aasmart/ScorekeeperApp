@@ -7,7 +7,7 @@ data class RoundPlayer(
     override val name: String,
     override var score: Int,
     var rank: Int
-) : Player() {
+) : AbstractPlayer() {
     companion object {
         fun fromNames(names: List<String>): List<RoundPlayer> {
             return names.map { RoundPlayer(it, 0, -1) }

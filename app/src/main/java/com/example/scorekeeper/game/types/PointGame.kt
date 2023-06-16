@@ -11,7 +11,7 @@ data class PointGame(
     override val players: List<SimplePlayer>,
     override var playerSortOrder: SortingOrder,
     override var isComplete: Boolean
-) : Game() {
+) : AbstractGame() {
     companion object Factory {
         fun new(name: String, playerNames: List<String>): PointGame {
             return PointGame(
